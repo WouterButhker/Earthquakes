@@ -1,0 +1,24 @@
+{
+  "name": "earthquakes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wouterbuthker/Earthquakes.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Wouterbuthker/Earthquakes/issues"
+  },
+  "homepage": "https://github.com/Wouterbuthker/Earthquakes#readme",
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "vite": "^6.0.3"
+  }
+}
