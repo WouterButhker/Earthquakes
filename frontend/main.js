@@ -13,12 +13,19 @@ import {platformModifierKeyOnly} from "ol/events/condition";
 import {getWidth} from "ol/extent";
 
 
-function main() {
-    loadOpenLayers()
+async function main() {
+    let earthquakeData = d3.json('query.json');
+    let tectonicPlatesData = d3.json('TectonicPlateBoundaries.geojson');
+    earthquakeData = await earthquakeData;
+    tectonicPlatesData = await tectonicPlatesData;
+
+    loadOpenLayers(earthquakeData, tectonicPlatesData)
+    loadScatterplot(earthquakeData)
+    loadDateSelection(earthquakeData)
 }
 
 
-async function loadOpenLayers() {
+function loadOpenLayers(earthquakeData, tectonicPlatesData) {
 
     const earthquakeStyle = function (feature) {
         return new Style({
@@ -31,7 +38,7 @@ async function loadOpenLayers() {
         })
     }
 
-    const earthquakeData = await d3.json('query.json');
+
     const earthquakesLayer = new VectorLayer({
         source: new VectorSource({
             features: new GeoJSON().readFeatures(earthquakeData, {
@@ -42,7 +49,7 @@ async function loadOpenLayers() {
         style: earthquakeStyle
     })
 
-    const tectonicPlatesData = await d3.json('TectonicPlateBoundaries.geojson');
+
     const tectonicPlatesLayer = new VectorLayer({
         source: new VectorSource({
             features: new GeoJSON().readFeatures(tectonicPlatesData, {
@@ -163,6 +170,221 @@ async function loadOpenLayers() {
         selectedFeatures.clear();
     });
 
+}
+
+function loadScatterplot(earthquakeData) {
+    const margin = {top: 40, right: 30, bottom: 50, left: 60},
+        width = 600 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+    const svg = d3.select("#scatterplot")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Extract data: create an array of objects { mag: ..., z: ... }
+    const points = earthquakeData.features.map(d => {
+        const mag = d.properties.mag;
+        const coords = d.geometry.coordinates; // [x, y, z]
+        const z = coords[2];
+        return { mag, z };
+    });
+
+    const xExtent = d3.extent(points, d => d.mag);
+    const yExtent = d3.extent(points, d => d.z);
+
+    const xScale = d3.scaleLinear()
+        .domain(xExtent).nice()
+        .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+        .domain(yExtent).nice()
+        .range([height, 0]);
+
+    // Add axes
+    const xAxis = d3.axisBottom(xScale);
+    const yAxis = d3.axisLeft(yScale);
+
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(xAxis);
+
+    svg.append("g")
+        .call(yAxis);
+
+    // Add axis labels
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", `translate(${width/2}, ${height+40})`)
+        .style("text-anchor", "middle")
+        .text("Magnitude");
+
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -50)
+        .attr("x", -height/2)
+        .style("text-anchor", "middle")
+        .text("Depth");
+
+    // Plot the points as circles
+    svg.selectAll("circle")
+        .data(points)
+        .join("circle")
+        .attr("cx", d => xScale(d.mag))
+        .attr("cy", d => yScale(d.z))
+        .attr("r", 4);
+
+}
+
+function loadDateSelection(earthquakeData) {
+    const margin = { top: 50, right: 30, bottom: 50, left: 60 },
+        width = 800 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select("#dateSelection")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+
+    // Extract month/year from timestamp and count occurrences
+    const counts = d3.rollup(
+        earthquakeData.features,
+        v => v.length,
+        d => {
+            const date = new Date(d.properties.time);
+            return date.getFullYear();
+        },
+        d => {
+            const date = new Date(d.properties.time);
+            return date.getMonth(); // 0-based month: 0 = January
+        }
+    );
+
+    // Convert the rollup to a flat array for easier scales
+    // This array will look like: [{year: ..., month: ..., count: ...}, ...]
+    let yearMonthData = [];
+    for (let [year, monthMap] of counts.entries()) {
+        for (let [month, count] of monthMap.entries()) {
+            yearMonthData.push({ year, month, count });
+        }
+    }
+
+    // Determine the range of years and define months
+    const years = Array.from(d3.group(yearMonthData, d => d.year).keys()).sort((a,b) => a - b);
+    const months = d3.range(0, 12); // 0=Jan, 11=Dec
+
+    // Create scales
+    const xScale = d3.scaleBand()
+        .domain(months)
+        .range([0, width])
+        .padding(0.05);
+
+    const yScale = d3.scaleBand()
+        .domain(years)
+        .range([0, height])
+        .padding(0.05);
+
+    // Color scale based on counts
+    const countExtent = d3.extent(yearMonthData, d => d.count);
+    const colorScale = d3.scaleSequential(d3.interpolateBlues)
+        .domain([0, countExtent[1]]);
+
+    // Draw the cells
+    g.selectAll(".cell")
+        .data(yearMonthData)
+        .join("rect")
+        .attr("class", "cell")
+        .attr("x", d => xScale(d.month))
+        .attr("y", d => yScale(d.year))
+        .attr("width", xScale.bandwidth())
+        .attr("height", yScale.bandwidth())
+        .attr("fill", d => colorScale(d.count));
+
+    // Create axes
+    const xAxis = d3.axisBottom(xScale)
+        .tickFormat(d => {
+            // Format month numbers to names
+            const formatMonth = d3.timeFormat("%b");
+            return formatMonth(new Date(2020, d, 1));
+        });
+
+    const yAxis = d3.axisLeft(yScale)
+        .tickFormat(d => d);
+
+    g.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(xAxis);
+
+    g.append("g")
+        .call(yAxis);
+
+    // Axis labels
+    g.append("text")
+        .attr("class", "axis-label")
+        .attr("x", width/2)
+        .attr("y", height + 40)
+        .attr("text-anchor", "middle")
+        .text("Month");
+
+    g.append("text")
+        .attr("class", "axis-label")
+        .attr("y", -40)
+        .attr("x", -height/2)
+        .attr("transform", "rotate(-90)")
+        .attr("text-anchor", "middle")
+        .text("Year");
+
+    // Optional: Add a legend for the color scale
+    const legendWidth = 200, legendHeight = 20;
+
+    const legendGroup = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top - 30})`);
+
+    const legendScale = d3.scaleLinear()
+        .domain([0, countExtent[1]])
+        .range([0, legendWidth]);
+
+    const legendAxis = d3.axisBottom(legendScale)
+        .ticks(5)
+        .tickSize(-legendHeight);
+
+    // Add a gradient for the legend
+    const defs = svg.append("defs");
+    const gradient = defs.append("linearGradient")
+        .attr("id", "legend-gradient")
+        .attr("x1", "0%").attr("y1", "0%")
+        .attr("x2", "100%").attr("y2", "0%");
+
+    const legendInterpolator = d3.interpolateBlues;
+    const numStops = 10;
+    d3.range(numStops).forEach(i => {
+        gradient.append("stop")
+            .attr("offset", (i/(numStops-1))*100 + "%")
+            .attr("stop-color", legendInterpolator(i/(numStops-1)));
+    });
+
+    legendGroup.append("rect")
+        .attr("width", legendWidth)
+        .attr("height", legendHeight)
+        .style("fill", "url(#legend-gradient)");
+
+    legendGroup.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(0,${legendHeight})`)
+        .call(legendAxis)
+        .select(".domain").remove();
+
+    legendGroup.append("text")
+        .attr("class", "legend")
+        .attr("y", -5)
+        .attr("x", legendWidth/2)
+        .attr("text-anchor", "middle")
+        .text("Count");
 }
 
 
