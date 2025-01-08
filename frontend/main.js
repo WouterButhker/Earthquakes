@@ -18,10 +18,15 @@ async function main() {
     let tectonicPlatesData = d3.json('TectonicPlateBoundaries.geojson');
     earthquakeData = await earthquakeData;
     tectonicPlatesData = await tectonicPlatesData;
-
+    
     loadOpenLayers(earthquakeData, tectonicPlatesData)
-    loadScatterplot(earthquakeData)
-    loadDateSelection(earthquakeData)
+    loadScatterplot(earthquakeData.features)
+    loadDateSelection(earthquakeData.features)
+
+    // Reset the plots when clicking the reset button
+    d3.select("#resetButton").on("click", function() {
+        updatePlots(earthquakeData.features);
+    });
 }
 
 
@@ -102,6 +107,15 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
     });
     map.addInteraction(select);
 
+    map.on("click", function() {
+        // TODO check whether a feature was actually clicked (and not the map)
+        // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
+        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('mag')).includes(d.properties.mag) && selectedFeatures.getArray().map(f => f.get('geometry').getCoordinates()[2]).includes(d.geometry.coordinates[2]));
+        // Update the plots
+        updatePlots(selectedData);
+    });
+
+
     const dragBox = new DragBox({
         condition: platformModifierKeyOnly,
     });
@@ -163,6 +177,10 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
                 selectedFeatures.extend(boxFeatures);
             }
         }
+        // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
+        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('mag')).includes(d.properties.mag) && selectedFeatures.getArray().map(f => f.get('geometry').getCoordinates()[2]).includes(d.geometry.coordinates[2]));
+        // update the plots
+        updatePlots(selectedData);
     });
 
     // clear selection when drawing a new box and when clicking on the map
@@ -172,19 +190,24 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
 
 }
 
-function loadScatterplot(earthquakeData) {
+function loadScatterplot(earthquakeDataFeatures) {
     const margin = {top: 40, right: 30, bottom: 50, left: 60},
         width = 600 - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
 
-    const svg = d3.select("#scatterplot")
-        .attr("width", width + margin.left + margin.right)
+    const svg = d3.select("#scatterplot");
+    
+    // clear the axis
+    svg.selectAll("*").remove();
+
+    // TODO maybe keep the axis and only update the data
+    svg.attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // Extract data: create an array of objects { mag: ..., z: ... }
-    const points = earthquakeData.features.map(d => {
+    const points = earthquakeDataFeatures.map(d => {
         const mag = d.properties.mag;
         const coords = d.geometry.coordinates; // [x, y, z]
         const z = coords[2];
@@ -235,16 +258,34 @@ function loadScatterplot(earthquakeData) {
         .attr("cx", d => xScale(d.mag))
         .attr("cy", d => yScale(d.z))
         .attr("r", 4);
+    
+    svg.on("click", function(chosenEvent) {
+        // Make the chosen point green and all others black
+        // Is not visible now since all the plots are directly updated
+        d3.selectAll("circle").attr("fill", "black");
+        d3.select(chosenEvent.srcElement).attr("fill", "green");
+        
+        // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
+        const selectedDataFeatures = earthquakeDataFeatures.filter(d => d.properties.mag == chosenEvent.srcElement.__data__.mag && d.geometry.coordinates[2] == chosenEvent.srcElement.__data__.z);
+        // Update the plots
+        updatePlots(selectedDataFeatures);
+    });
 
+    // TODO add a box selection
 }
 
-function loadDateSelection(earthquakeData) {
+function loadDateSelection(earthquakeDataFeatures) {
     const margin = { top: 50, right: 30, bottom: 50, left: 60 },
         width = 800 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
-    const svg = d3.select("#dateSelection")
-        .attr("width", width + margin.left + margin.right)
+    const svg = d3.select("#dateSelection");
+
+    // clear the axis
+    svg.selectAll("*").remove();
+    
+    // TODO maybe keep the axis and only update the data
+    svg.attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom);
 
     const g = svg.append("g")
@@ -253,7 +294,7 @@ function loadDateSelection(earthquakeData) {
 
     // Extract month/year from timestamp and count occurrences
     const counts = d3.rollup(
-        earthquakeData.features,
+        earthquakeDataFeatures,
         v => v.length,
         d => {
             const date = new Date(d.properties.time);
@@ -387,5 +428,11 @@ function loadDateSelection(earthquakeData) {
         .text("Count");
 }
 
+function updatePlots(selectedDataFeatures) {
+    // Update the plots based on the selected features
+    loadScatterplot(selectedDataFeatures);
+    loadDateSelection(selectedDataFeatures);
+    // TODO update the map as well
+}
 
 main();
