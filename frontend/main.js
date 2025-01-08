@@ -14,9 +14,11 @@ import {getWidth} from "ol/extent";
 
 
 async function main() {
-    let earthquakeData = d3.json('query.json');
+    let earthquakeData = d3.json('earthquakes.geojson');
+    let tsunamiData = d3.json('tsunamis.geojson');
     let tectonicPlatesData = d3.json('TectonicPlateBoundaries.geojson');
     earthquakeData = await earthquakeData;
+    tsunamiData = await tsunamiData;
     tectonicPlatesData = await tectonicPlatesData;
     
     loadOpenLayers(earthquakeData, tectonicPlatesData)
@@ -33,9 +35,10 @@ async function main() {
 function loadOpenLayers(earthquakeData, tectonicPlatesData) {
 
     const earthquakeStyle = function (feature) {
+        let size = feature.get('Mag') ? feature.get('Mag') : 5;
         return new Style({
             image: new CircleStyle({
-                radius: feature.get('mag') * 1,
+                radius: size,
                 fill: new Fill({
                     color: 'red'
                 })
@@ -208,9 +211,8 @@ function loadScatterplot(earthquakeDataFeatures) {
 
     // Extract data: create an array of objects { mag: ..., z: ... }
     const points = earthquakeDataFeatures.map(d => {
-        const mag = d.properties.mag;
-        const coords = d.geometry.coordinates; // [x, y, z]
-        const z = coords[2];
+        const mag = d.properties["Mag"]
+        const z = d.properties["Focal Depth (km)"]
         return { mag, z };
     });
 
