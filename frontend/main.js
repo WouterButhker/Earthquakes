@@ -113,7 +113,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
     map.on("click", function() {
         // TODO check whether a feature was actually clicked (and not the map)
         // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
-        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('mag')).includes(d.properties.mag) && selectedFeatures.getArray().map(f => f.get('geometry').getCoordinates()[2]).includes(d.geometry.coordinates[2]));
+        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
         // Update the plots
         updatePlots(selectedData);
     });
@@ -181,8 +181,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
             }
         }
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
-        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('mag')).includes(d.properties.mag) && selectedFeatures.getArray().map(f => f.get('geometry').getCoordinates()[2]).includes(d.geometry.coordinates[2]));
-        // update the plots
+        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));        // update the plots
         updatePlots(selectedData);
     });
 
@@ -248,7 +247,7 @@ function loadScatterplot(earthquakeDataFeatures) {
     svg.append("text")
         .attr("class", "axis-label")
         .attr("transform", "rotate(-90)")
-        .attr("y", -50)
+        .attr("y", +15)
         .attr("x", -height/2)
         .style("text-anchor", "middle")
         .text("Depth");
@@ -268,7 +267,8 @@ function loadScatterplot(earthquakeDataFeatures) {
         d3.select(chosenEvent.srcElement).attr("fill", "green");
         
         // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
-        const selectedDataFeatures = earthquakeDataFeatures.filter(d => d.properties.mag == chosenEvent.srcElement.__data__.mag && d.geometry.coordinates[2] == chosenEvent.srcElement.__data__.z);
+        // const selectedData = earthquakeDataFeatures.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
+        const selectedDataFeatures = earthquakeDataFeatures.filter(d => d.properties.Mag == chosenEvent.srcElement.__data__.mag && d.properties["Focal Depth (km)"] == chosenEvent.srcElement.__data__.z);
         // Update the plots
         updatePlots(selectedDataFeatures);
     });
@@ -299,12 +299,10 @@ function loadDateSelection(earthquakeDataFeatures) {
         earthquakeDataFeatures,
         v => v.length,
         d => {
-            const date = new Date(d.properties.time);
-            return date.getFullYear();
+            return parseInt(d.properties.Year);
         },
         d => {
-            const date = new Date(d.properties.time);
-            return date.getMonth(); // 0-based month: 0 = January
+            return parseInt(d.properties.Mo - 1); // 0-based month: 0 = January
         }
     );
 
