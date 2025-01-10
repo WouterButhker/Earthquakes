@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="./style.css"/>
 </head>
 <body>
-<!-- <h1>Hello world</h1> -->
 
 <div id="content">
     <div id="dateSelectionDiv">
@@ -15,13 +14,27 @@
     </div>
 
     <div id="map"></div>
-    <!-- TODO: Replace with a clean toggle switch latter-->
     <div id="toggleViewDiv">
         <button id="toggleView">Toggle earthquake view (dots/heatmap)</button>
     </div>
 
-    <div id="scatterplotDiv">
-        <svg id="scatterplot"></svg>
+    <div id="columnDiv">
+        <div id="scatterplotDiv">
+            <svg id="scatterplot"></svg>
+        </div>
+        <div id="detailedViewDiv">
+            <text><b>More information:</b></text>
+            <br>
+            <text id="text_magnitude">Magnitude: </text>
+            <br>
+            <text id="text_depth">Depth: </text>
+            <br>
+            <text id="text_country">Location name: </text>
+            <br>
+            <text id="text_date">Date: </text>
+            <br>
+            <text id="text_disasters">Connected disasters: </text>
+        </div>
     </div>
     <div id="resetButtonDiv">
         <button id="resetButton">Reset</button>
