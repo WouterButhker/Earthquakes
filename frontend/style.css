@@ -14,18 +14,18 @@
 }
 
 #dateSelectionDiv {
-    min-width: 100px;
+    min-width: 30%;
     min-height: 100px;
 }
 
 #map {
-    width: 600px;
+    min-width: 30%;
     height: 600px;
 
 }
 
 #scatterplotDiv {
-    min-width: 100px;
+    min-width: 30%;
     min-height: 100px;
 }
 

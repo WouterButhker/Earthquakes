@@ -307,8 +307,8 @@ function loadScatterplot(earthquakeDataFeatures) {
 
 function loadDateSelection(earthquakeDataFeatures) {
     const margin = { top: 50, right: 30, bottom: 50, left: 60 },
-        width = 800 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+        width = 450 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
 
     const svg = d3.select("#dateSelection");
 
