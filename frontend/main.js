@@ -195,6 +195,8 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiDataFeatures)
 }
 
 function loadScatterplot(earthquakeDataFeatures) {
+    // remove the undefined magnitudes and depth from the input
+    earthquakeDataFeatures = earthquakeDataFeatures.filter(d => d.properties.Mag !== undefined && d.properties["Focal Depth (km)"] !== undefined);
     const margin = {top: 40, right: 30, bottom: 50, left: 60},
         width = 600 - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
