@@ -24,6 +24,7 @@ async function main() {
     loadOpenLayers(earthquakeData, tectonicPlatesData)
     loadScatterplot(earthquakeData.features)
     loadDateSelection(earthquakeData.features)
+    loadDetailedView(undefined)
 
     // Reset the plots when clicking the reset button
     d3.select("#resetButton").on("click", function() {
@@ -116,6 +117,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
         const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
         // Update the plots
         updatePlots(selectedData);
+        updateDetailedView(selectedData[0]);
     });
 
 
@@ -453,6 +455,33 @@ function loadDateSelection(earthquakeDataFeatures) {
         .attr("x", legendWidth/2)
         .attr("text-anchor", "middle")
         .text("Count");
+}
+
+function loadDetailedView(selectedDataPoint) {
+    const detailed_view = d3.select("#detailedview")
+        .append("text")
+        .attr("y", 50);
+
+    if (selectedDataPoint === undefined) {
+        detailed_view.text("Nothing selected");
+    } else {
+        detailed_view.text("Selected magnitude: " + selectedDataPoint.properties.Mag);
+    }
+}
+
+function updateDetailedView(selectedDataPoint) {
+    const detailed_view = d3.select("#detailedview")
+        .select("text");
+
+    console.log(selectedDataPoint);
+    if (selectedDataPoint === undefined) {
+        detailed_view.text("Nothing selected");
+    } else {
+        // add magnitude and depth on new lines
+        detailed_view.text("Magnitude: " + selectedDataPoint.properties.Mag 
+            + " Depth: " + selectedDataPoint.properties["Focal Depth (km)"]
+            + " Country: " + selectedDataPoint.properties.Country);
+    }
 }
 
 function updateScatterplot(selectedDataFeatures) {

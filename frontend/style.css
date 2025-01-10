@@ -8,6 +8,11 @@
     column-gap: 20px;
 }
 
+#columnDiv {
+    display: flex;
+    flex-direction: column;
+}
+
 #dateSelectionDiv {
     min-width: 100px;
     min-height: 100px;
@@ -20,6 +25,11 @@
 }
 
 #scatterplotDiv {
+    min-width: 100px;
+    min-height: 100px;
+}
+
+#detailedDiv {
     min-width: 100px;
     min-height: 100px;
 }
