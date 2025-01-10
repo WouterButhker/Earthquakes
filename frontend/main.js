@@ -21,7 +21,7 @@ async function main() {
     tsunamiData = await tsunamiData;
     tectonicPlatesData = await tectonicPlatesData;
     
-    loadOpenLayers(earthquakeData, tectonicPlatesData)
+    loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiData.features)
     loadScatterplot(earthquakeData.features)
     loadDateSelection(earthquakeData.features)
     loadDetailedView(undefined)
@@ -33,7 +33,7 @@ async function main() {
 }
 
 
-function loadOpenLayers(earthquakeData, tectonicPlatesData) {
+function loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiDataFeatures) {
 
     const earthquakeStyle = function (feature) {
         let size = feature.get('Mag') ? feature.get('Mag') : 5;
@@ -117,7 +117,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
         const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
         // Update the plots
         updatePlots(selectedData);
-        updateDetailedView(selectedData[0]);
+        updateDetailedView(selectedData[0], tsunamiDataFeatures);
     });
 
 
@@ -458,31 +458,66 @@ function loadDateSelection(earthquakeDataFeatures) {
 }
 
 function loadDetailedView(selectedDataPoint) {
-    const detailed_view = d3.select("#detailedview")
-        .append("text")
-        .attr("y", 50);
-
-    if (selectedDataPoint === undefined) {
-        detailed_view.text("Nothing selected");
-    } else {
-        detailed_view.text("Selected magnitude: " + selectedDataPoint.properties.Mag);
-    }
+    const text_magnitude = d3.select("#text_magnitude")
+        .append("text");
+    const text_depth = d3.select("#text_depth")
+        .append("text");
+    const text_country = d3.select("#text_country")
+        .append("text");
+    const text_date = d3.select("#text_date")
+        .append("text");
+    const text_disasters = d3.select("#text_disasters")
+        .append("text");
 }
 
-function updateDetailedView(selectedDataPoint) {
-    const detailed_view = d3.select("#detailedview")
+function updateDetailedView(selectedDataPoint, tsunamiDataFeatures) {
+    const text_magnitude = d3.select("#text_magnitude")
         .select("text");
+    const text_depth = d3.select("#text_depth")
+        .select("text");
+    const text_country = d3.select("#text_country")
+        .select("text");
+    const text_date = d3.select("#text_date")
+            .select("text");
+    const text_disasters = d3.select("#text_disasters")
+            .select("text");
 
     console.log(selectedDataPoint);
     if (selectedDataPoint === undefined) {
-        detailed_view.text("Nothing selected");
+        text_magnitude.text("Nothing selected");
+        text_depth.text("Nothing selected");
+        text_country.text("Nothing selected");
+        text_date.text("Nothing selected");
+        text_disasters.text("Nothing selected");
     } else {
-        // add magnitude and depth on new lines
-        detailed_view.text("Magnitude: " + selectedDataPoint.properties.Mag 
-            + " Depth: " + selectedDataPoint.properties["Focal Depth (km)"]
-            + " Country: " + selectedDataPoint.properties.Country);
+        // TODO add handlers for when the data is not available
+        text_magnitude.text(selectedDataPoint.properties.Mag);
+        text_depth.text(selectedDataPoint.properties["Focal Depth (km)"]);
+        text_country.text(selectedDataPoint.properties["Location Name"]);
+        const datestring = getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year);
+        text_date.text(datestring);
+        text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
     }
 }
+
+function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
+    const tsunamiID = selectedDataPoint.properties.Tsu;
+    if (tsunamiID === undefined) {
+        return "No related tsunamis";
+    }
+    else {
+        const selectedData = tsunamiDataFeatures.filter(d => d.properties.Id == tsunamiID);
+        console.log(selectedData);
+        return selectedData[0].properties["Location Name"];
+    }
+}
+
+function getDateString(month, year) {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    return months[month] + " " + year;
+}
+
 
 function updateScatterplot(selectedDataFeatures) {
     // Update the scatterplot based on the selected features
