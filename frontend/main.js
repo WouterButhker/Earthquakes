@@ -1,17 +1,23 @@
 import * as d3 from 'd3';
 import TileLayer from "ol/layer/Tile";
-import {OSM, TileWMS, XYZ} from "ol/source";
-import {View} from "ol";
+import { OSM, TileWMS, XYZ } from "ol/source";
+import { View } from "ol";
 import Map from 'ol/Map.js';
 import VectorSource from "ol/source/Vector";
-import {GeoJSON} from "ol/format";
+import { GeoJSON } from "ol/format";
 import VectorLayer from "ol/layer/Vector";
-import {Fill, Stroke, Style} from "ol/style";
+import HeatmapLayer from 'ol/layer/Heatmap';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import { Fill, Stroke, Style } from "ol/style";
 import CircleStyle from "ol/style/Circle";
-import {DragBox, Select} from "ol/interaction";
-import {platformModifierKeyOnly} from "ol/events/condition";
-import {getWidth} from "ol/extent";
+import { DragBox, Select } from "ol/interaction";
+import * as olProj from 'ol/proj';
+import { platformModifierKeyOnly } from "ol/events/condition";
+import { getWidth } from "ol/extent";
 
+let earthquakesLayer = null;
+let heatmapLayer = null;
 
 async function main() {
     let earthquakeData = d3.json('earthquakes.geojson');
@@ -30,6 +36,12 @@ async function main() {
     d3.select("#resetButton").on("click", function() {
         updatePlots(earthquakeData.features);
     });
+
+    d3.select("#toggleView").on("click", function() {
+        const heatmapVisible = heatmapLayer.getVisible();
+        heatmapLayer.setVisible(!heatmapVisible);
+        earthquakesLayer.setVisible(heatmapVisible);
+    });
 }
 
 
@@ -47,16 +59,54 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiDataFeatures)
         })
     }
 
-
-    const earthquakesLayer = new VectorLayer({
+    earthquakesLayer = new VectorLayer({
         source: new VectorSource({
             features: new GeoJSON().readFeatures(earthquakeData, {
                 dataProjection: 'EPSG:4326',
                 featureProjection: 'EPSG:3857'
             })
         }),
-        style: earthquakeStyle
-    })
+        style: earthquakeStyle,
+        visible: false
+    });
+
+    const mapExtent = [-180, -90, 180, 90];
+    const step = 1;
+
+    const heatmapSource = new VectorSource({
+        features: new GeoJSON().readFeatures(earthquakeData, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'
+        })
+    });
+
+    // Add weights to earthquake features
+    heatmapSource.getFeatures().forEach(feature => {
+        const magnitude = feature.get('Mag');
+        // Arbitrary weight parameters
+        // TODO: Weight things dynamically on zooming? Maybe tweak manually?
+        const weight = magnitude ? Math.min(magnitude / 20, 1) : 0.1;
+        feature.set('weight', weight); // Scale down to avoid oversaturation
+    });
+
+    for (let lon = mapExtent[0]; lon <= mapExtent[2]; lon += step) {
+        for (let lat = mapExtent[1]; lat <= mapExtent[3]; lat += step) {
+            const feature = new Feature({
+                geometry: new Point(olProj.fromLonLat([lon, lat])),
+                weight: 0.01
+            });
+            heatmapSource.addFeature(feature);
+        }
+    }
+
+    heatmapLayer = new HeatmapLayer({
+        source: heatmapSource,
+        blur: 15,
+        radius: 10,
+        weight: 'weight',
+        gradient: ['rgba(0, 0, 139, 0.5)', 'blue', 'green', 'yellow', 'red'],
+        visible: true
+    });
 
 
     const tectonicPlatesLayer = new VectorLayer({
@@ -83,6 +133,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiDataFeatures)
         layers: [
             openStreetMap,
             tectonicPlatesLayer,
+            heatmapLayer,
             earthquakesLayer
         ],
         view: new View({
