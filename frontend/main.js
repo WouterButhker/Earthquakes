@@ -16,6 +16,8 @@ import * as olProj from 'ol/proj';
 import { platformModifierKeyOnly } from "ol/events/condition";
 import { getWidth } from "ol/extent";
 
+let earthquakesLayer = null;
+let heatmapLayer = null;
 
 async function main() {
     let earthquakeData = d3.json('earthquakes.geojson');
@@ -32,6 +34,12 @@ async function main() {
     // Reset the plots when clicking the reset button
     d3.select("#resetButton").on("click", function() {
         updatePlots(earthquakeData.features);
+    });
+
+    d3.select("#toggleView").on("click", function() {
+        const heatmapVisible = heatmapLayer.getVisible();
+        heatmapLayer.setVisible(!heatmapVisible);
+        earthquakesLayer.setVisible(heatmapVisible);
     });
 }
 
