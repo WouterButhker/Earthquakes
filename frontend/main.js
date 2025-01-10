@@ -21,9 +21,10 @@ async function main() {
     tsunamiData = await tsunamiData;
     tectonicPlatesData = await tectonicPlatesData;
     
-    loadOpenLayers(earthquakeData, tectonicPlatesData)
+    loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiData.features)
     loadScatterplot(earthquakeData.features)
     loadDateSelection(earthquakeData.features)
+    loadDetailedView(undefined)
 
     // Reset the plots when clicking the reset button
     d3.select("#resetButton").on("click", function() {
@@ -32,7 +33,7 @@ async function main() {
 }
 
 
-function loadOpenLayers(earthquakeData, tectonicPlatesData) {
+function loadOpenLayers(earthquakeData, tectonicPlatesData, tsunamiDataFeatures) {
 
     const earthquakeStyle = function (feature) {
         let size = feature.get('Mag') ? feature.get('Mag') : 5;
@@ -116,6 +117,7 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
         const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
         // Update the plots
         updatePlots(selectedData);
+        updateDetailedView(selectedData[0], tsunamiDataFeatures);
     });
 
 
@@ -193,6 +195,8 @@ function loadOpenLayers(earthquakeData, tectonicPlatesData) {
 }
 
 function loadScatterplot(earthquakeDataFeatures) {
+    // remove the undefined magnitudes and depth from the input
+    earthquakeDataFeatures = earthquakeDataFeatures.filter(d => d.properties.Mag !== undefined && d.properties["Focal Depth (km)"] !== undefined);
     const margin = {top: 40, right: 30, bottom: 50, left: 60},
         width = 600 - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
@@ -219,12 +223,14 @@ function loadScatterplot(earthquakeDataFeatures) {
     const yExtent = d3.extent(points, d => d.z);
 
     const xScale = d3.scaleLinear()
-        .domain(xExtent).nice()
-        .range([0, width]);
+        .domain([0, xExtent[1]]).nice()
+        .range([0, width])
+        .unknown(margin.left);
 
     const yScale = d3.scaleLinear()
-        .domain(yExtent).nice()
-        .range([height, 0]);
+        .domain([0, yExtent[1]]).nice()
+        .range([height, 0])
+        .unknown(height - margin.bottom);
 
     // Add axes
     const xAxis = d3.axisBottom(xScale);
@@ -253,33 +259,58 @@ function loadScatterplot(earthquakeDataFeatures) {
         .text("Depth");
 
     // Plot the points as circles
-    svg.selectAll("circle")
+    const dot = svg.selectAll("circle")
         .data(points)
         .join("circle")
         .attr("cx", d => xScale(d.mag))
         .attr("cy", d => yScale(d.z))
-        .attr("r", 4);
+        .attr("r", 4)
+        .attr("fill", "black");
+
+    // Undefined dots are displayed in red
+    // TODO how to handle this?
+    dot.filter(d => d.mag === undefined || d.z === undefined)
+        .attr("fill", "red");
     
     svg.on("click", function(chosenEvent) {
         // Make the chosen point green and all others black
-        // Is not visible now since all the plots are directly updated
-        d3.selectAll("circle").attr("fill", "black");
-        d3.select(chosenEvent.srcElement).attr("fill", "green");
+        // d3.selectAll("circle").attr("fill", "black");
+        // d3.select(chosenEvent.srcElement).attr("fill", "green");
         
         // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
         // const selectedData = earthquakeDataFeatures.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
         const selectedDataFeatures = earthquakeDataFeatures.filter(d => d.properties.Mag == chosenEvent.srcElement.__data__.mag && d.properties["Focal Depth (km)"] == chosenEvent.srcElement.__data__.z);
         // Update the plots
-        updatePlots(selectedDataFeatures);
+        updateDateSelection(selectedDataFeatures);
     });
 
-    // TODO add a box selection
+    // from https://observablehq.com/@d3/brushable-scatterplot
+    svg.call(d3.brush().on("start brush end", ({selection}) => {
+        let value = [];
+        if (selection) {
+          const [[x0, y0], [x1, y1]] = selection;
+          value = dot
+            .style("fill", "black")
+            .filter(d => x0 <= xScale(d.mag) && xScale(d.mag) < x1 && y0 <= yScale(d.z) && yScale(d.z) < y1)
+            .style("fill", "green")
+            .data();
+            
+            const selectedDataFeatures = earthquakeDataFeatures.filter(d => value.map(v => v.mag).includes(d.properties.Mag) && value.map(v => v.z).includes(d.properties["Focal Depth (km)"]));
+            updateDateSelection(selectedDataFeatures);
+        } else {
+            dot.style("fill", "black");
+        }
+    
+        // Inform downstream cells that the selection has changed.
+        // TODO use this instead of calling the function to update the plots
+        svg.property("value", value).dispatch("input");
+      }));
 }
 
 function loadDateSelection(earthquakeDataFeatures) {
     const margin = { top: 50, right: 30, bottom: 50, left: 60 },
-        width = 800 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+        width = 450 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
 
     const svg = d3.select("#dateSelection");
 
@@ -426,6 +457,78 @@ function loadDateSelection(earthquakeDataFeatures) {
         .attr("x", legendWidth/2)
         .attr("text-anchor", "middle")
         .text("Count");
+}
+
+function loadDetailedView(selectedDataPoint) {
+    const text_magnitude = d3.select("#text_magnitude")
+        .append("text");
+    const text_depth = d3.select("#text_depth")
+        .append("text");
+    const text_country = d3.select("#text_country")
+        .append("text");
+    const text_date = d3.select("#text_date")
+        .append("text");
+    const text_disasters = d3.select("#text_disasters")
+        .append("text");
+}
+
+function updateDetailedView(selectedDataPoint, tsunamiDataFeatures) {
+    const text_magnitude = d3.select("#text_magnitude")
+        .select("text");
+    const text_depth = d3.select("#text_depth")
+        .select("text");
+    const text_country = d3.select("#text_country")
+        .select("text");
+    const text_date = d3.select("#text_date")
+            .select("text");
+    const text_disasters = d3.select("#text_disasters")
+            .select("text");
+
+    console.log(selectedDataPoint);
+    if (selectedDataPoint === undefined) {
+        text_magnitude.text("Nothing selected");
+        text_depth.text("Nothing selected");
+        text_country.text("Nothing selected");
+        text_date.text("Nothing selected");
+        text_disasters.text("Nothing selected");
+    } else {
+        // TODO add handlers for when the data is not available
+        text_magnitude.text(selectedDataPoint.properties.Mag);
+        text_depth.text(selectedDataPoint.properties["Focal Depth (km)"]);
+        text_country.text(selectedDataPoint.properties["Location Name"]);
+        const datestring = getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year);
+        text_date.text(datestring);
+        text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
+    }
+}
+
+function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
+    const tsunamiID = selectedDataPoint.properties.Tsu;
+    if (tsunamiID === undefined) {
+        return "No related tsunamis";
+    }
+    else {
+        const selectedData = tsunamiDataFeatures.filter(d => d.properties.Id == tsunamiID);
+        console.log(selectedData);
+        return selectedData[0].properties["Location Name"];
+    }
+}
+
+function getDateString(month, year) {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    return months[month] + " " + year;
+}
+
+
+function updateScatterplot(selectedDataFeatures) {
+    // Update the scatterplot based on the selected features
+    loadScatterplot(selectedDataFeatures);
+}
+
+function updateDateSelection(selectedDataFeatures) {
+    // Update the scatterplot based on the selected features
+    loadDateSelection(selectedDataFeatures);
 }
 
 function updatePlots(selectedDataFeatures) {
