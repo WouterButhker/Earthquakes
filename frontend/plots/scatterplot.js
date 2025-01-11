@@ -27,62 +27,65 @@ export const scatter_plot = {
                 console.log('No data available');
                 return;
             }
-            const margin = { top: 40, right: 30, bottom: 50, left: 60 },
-            width = 600 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+            const margin = { top: 40, right: 30, bottom: 50, left: 80 },
+                width = 600 - margin.left - margin.right,
+                height = 400 - margin.top - margin.bottom;
 
             const svg = d3.select('#scatterplot');
 
-            // clear the axis
+            // Clear the SVG
             svg.selectAll('*').remove();
 
             svg.attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
+                .attr('height', height + margin.top + margin.bottom);
 
+            // Create a group for the plot
+            const plotGroup = svg.append('g')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-
+            // Define scales
             const xExtent = d3.extent(points, (d) => d.x_value);
             const yExtent = d3.extent(points, (d) => d.y_value);
 
             const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
 
-            const yScale = d3
-                .scaleLinear()
-                .domain([0, yExtent[1]])
-                .nice()
-                .range([height, 0])
-                .unknown(height - margin.bottom);
+            const yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
 
             // Add axes
             const xAxis = d3.axisBottom(xScale);
             const yAxis = d3.axisLeft(yScale);
 
-            svg.append('g').attr('transform', `translate(0,${height})`).call(xAxis);
+            // Append axes to the plot group
+            plotGroup.append('g')
+                .attr('transform', `translate(0, ${height})`)
+                .call(xAxis);
 
-            svg.append('g').call(yAxis);
+            plotGroup.append('g')
+                .call(yAxis);
 
             // Add axis labels
             // TODO add a dropdown for the x axis
-            svg.append('text')
+            plotGroup.append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', `translate(${width / 2}, ${height + 40})`)
                 .style('text-anchor', 'middle')
-                .text('Magnitude');
+                .style('font-size', '12px')
+                .style('fill', 'black')
+                .text(xaxis_label);
 
             // TODO add a dropdown for the y axis
-            svg.append('text')
+            plotGroup.append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', 'rotate(-90)')
-                .attr('y', +15)
+                .attr('y', -margin.left + 15)
                 .attr('x', -height / 2)
                 .style('text-anchor', 'middle')
-                .text('Depth');
+                .style('font-size', '12px')
+                .style('fill', 'black')
+                .text(yaxis_label);
 
             // Plot the points as circles
-            const dot = svg
-                .selectAll('circle')
+            plotGroup.selectAll('circle')
                 .data(points)
                 .join('circle')
                 .attr('cx', (d) => xScale(d.x_value))
@@ -94,8 +97,10 @@ export const scatter_plot = {
 
             // Undefined dots are displayed in red
             // TODO remove this because the data is already filtered before plotting
-            dot.filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
+            plotGroup.selectAll('circle').filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
 
+            // Click behaviour
+            // TODO check if this is still needed and if it works
             svg.on('click', function (chosenEvent) {
                 // Make the chosen point green and all others black
                 // d3.selectAll("circle").attr("fill", "black");
@@ -113,15 +118,18 @@ export const scatter_plot = {
 
             // from https://observablehq.com/@d3/brushable-scatterplot
             // TODO only when ctrl is pressed
-            svg.call(
+            // Brushing behavior
+            plotGroup.call(
                 d3.brush().on('start brush end', ({ selection }) => {
                     let value = [];
                     if (selection) {
                         const [[x0, y0], [x1, y1]] = selection;
-                        value = dot
+                        value = plotGroup.selectAll('circle')
                             .style('fill', 'black')
                             .filter(
-                                (d) => x0 <= xScale(d.x_value) && xScale(d.x_value) < x1 && y0 <= yScale(d.y_value) && yScale(d.y_value) < y1,
+                                (d) =>
+                                    x0 <= xScale(d.x_value) && xScale(d.x_value) < x1 &&
+                                    y0 <= yScale(d.y_value) && yScale(d.y_value) < y1,
                             )
                             .style('fill', 'green')
                             .data();
@@ -133,7 +141,7 @@ export const scatter_plot = {
                         );
                         plots['date_selection'].update(plots, selectedDataFeatures);
                     } else {
-                        dot.style('fill', 'black');
+                        plotGroup.selectAll('circle').style('fill', 'black');
                     }
                 }),
             );
