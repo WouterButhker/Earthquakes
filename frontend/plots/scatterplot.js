@@ -6,21 +6,21 @@ export const scatter_plot = {
         // TODO add function that only highlights the selected features
 
         // TODO add check if there are any values left, otherwise display a message
-        let [earthquakeDataFeatures, action] = data;
+        let [earthquakeDataFeatures, action, xaxis_label, yaxis_label] = data;
 
         // TODO remove the undefined features that are undefined for the chosen features
         earthquakeDataFeatures = earthquakeDataFeatures.filter(
-            (d) => d.properties.Mag !== undefined && d.properties['Focal Depth (km)'] !== undefined,
+            (d) => d.properties[xaxis_label] !== undefined && d.properties[yaxis_label] !== undefined,
         );
 
         // The scatterplot needs to be created from scratch, because the axis could change based on the selection
         if (action == 'filter') {
             // TODO let the user choose the x and y axis
-            // Extract data: create an array of objects { mag: ..., z: ... }
+            // Extract data: create an array of objects { x_value: ..., y_value: ... }
             const points = earthquakeDataFeatures.map((d) => {
-                const mag = d.properties['Mag'];
-                const z = d.properties['Focal Depth (km)'];
-                return { mag, z };
+                const x_value = d.properties[xaxis_label];
+                const y_value = d.properties[yaxis_label];
+                return { x_value, y_value };
             });
             if (points.length == 0) {
                 d3.select('#scatterplot').text('No data available');
@@ -43,8 +43,8 @@ export const scatter_plot = {
 
 
 
-            const xExtent = d3.extent(points, (d) => d.mag);
-            const yExtent = d3.extent(points, (d) => d.z);
+            const xExtent = d3.extent(points, (d) => d.x_value);
+            const yExtent = d3.extent(points, (d) => d.y_value);
 
             const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
 
@@ -85,8 +85,8 @@ export const scatter_plot = {
                 .selectAll('circle')
                 .data(points)
                 .join('circle')
-                .attr('cx', (d) => xScale(d.mag))
-                .attr('cy', (d) => yScale(d.z))
+                .attr('cx', (d) => xScale(d.x_value))
+                .attr('cy', (d) => yScale(d.y_value))
                 .attr('r', 4)
                 .attr('fill', 'black');
 
@@ -94,7 +94,7 @@ export const scatter_plot = {
 
             // Undefined dots are displayed in red
             // TODO remove this because the data is already filtered before plotting
-            dot.filter((d) => d.mag === undefined || d.z === undefined).attr('fill', 'red');
+            dot.filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
 
             svg.on('click', function (chosenEvent) {
                 // Make the chosen point green and all others black
@@ -102,11 +102,11 @@ export const scatter_plot = {
                 // d3.select(chosenEvent.srcElement).attr("fill", "green");
 
                 // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
-                // const selectedData = earthquakeDataFeatures.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
+                // const selectedData = earthquakeDataFeatures.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties[xaxis_label]) && selectedFeatures.getArray().map(f => f.get(yaxis_label)).includes(d.properties["Focal Depth (km)"]));
                 const selectedDataFeatures = earthquakeDataFeatures.filter(
                     (d) =>
-                        d.properties.Mag == chosenEvent.srcElement.__data__.mag &&
-                        d.properties['Focal Depth (km)'] == chosenEvent.srcElement.__data__.z,
+                        d.properties[xaxis_label] == chosenEvent.srcElement.__data__.x_value &&
+                        d.properties[yaxis_label] == chosenEvent.srcElement.__data__.y_value,
                 );
                 plots['date_selection'].update(plots, selectedDataFeatures);
             });
@@ -121,15 +121,15 @@ export const scatter_plot = {
                         value = dot
                             .style('fill', 'black')
                             .filter(
-                                (d) => x0 <= xScale(d.mag) && xScale(d.mag) < x1 && y0 <= yScale(d.z) && yScale(d.z) < y1,
+                                (d) => x0 <= xScale(d.x_value) && xScale(d.x_value) < x1 && y0 <= yScale(d.y_value) && yScale(d.y_value) < y1,
                             )
                             .style('fill', 'green')
                             .data();
 
                         const selectedDataFeatures = earthquakeDataFeatures.filter(
                             (d) =>
-                                value.map((v) => v.mag).includes(d.properties.Mag) &&
-                                value.map((v) => v.z).includes(d.properties['Focal Depth (km)']),
+                                value.map((v) => v.x_value).includes(d.properties[xaxis_label]) &&
+                                value.map((v) => v.y_value).includes(d.properties[yaxis_label]),
                         );
                         plots['date_selection'].update(plots, selectedDataFeatures);
                     } else {
@@ -163,13 +163,13 @@ export const scatter_plot = {
 
             const selectedData = earthquakeDataFeatures;
             const points = selectedData.map((d) => {
-                const mag = d.properties['Mag'];
-                const z = d.properties['Focal Depth (km)'];
-                return { mag, z };
+                const x_value = d.properties[xaxis_label];
+                const y_value = d.properties[yaxis_label];
+                return { x_value, y_value };
             });
 
-            const xExtent = d3.extent(points, (d) => d.mag);
-            const yExtent = d3.extent(points, (d) => d.z);
+            const xExtent = d3.extent(points, (d) => d.x_value);
+            const yExtent = d3.extent(points, (d) => d.y_value);
 
             const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, 600]);
 
@@ -180,8 +180,8 @@ export const scatter_plot = {
             dot.attr('fill', 'black').attr('fill-opacity', 0.5);
             dot.filter(
                 (d) =>
-                    selectedData.map((v) => v.properties.Mag).includes(d.mag) &&
-                    selectedData.map((v) => v.properties['Focal Depth (km)']).includes(d.z),
+                    selectedData.map((v) => v.properties[xaxis_label]).includes(d.x_value) &&
+                    selectedData.map((v) => v.properties[yaxis_label]).includes(d.y_value),
             ).attr('fill', 'yellow');
         }
     },
