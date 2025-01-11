@@ -39,29 +39,74 @@ export const date_selection = {
             }
         }
 
+        const all_years = yearMonthData.map(d => d.year);
+        const minYear = d3.min(all_years);
+        const maxYear = d3.max(all_years);
+
+        // Define the range size, e.g., every 5 years
+        const rangeSize = 500;
+
+        // Create year ranges
+        let yearRanges = [];
+        for (let start = minYear; start <= maxYear; start += rangeSize) {
+            yearRanges.push({
+                start: start,
+                end: Math.min(start + rangeSize - 1, maxYear)
+            });
+        }
+
+        function aggregateDataByYearRange(startYear, endYear) {
+            const filteredData = yearMonthData.filter(d => d.year >= startYear && d.year <= endYear);
+            return d3.rollups(filteredData, 
+                v => d3.sum(v, leaf => leaf.count), // Summing function
+                d => d.month // Grouping function
+            ).map(([month, count]) => ({ month, count }));
+        }
+        
+        // Iterate over each year range and store results
+        const count_data = yearRanges.map(range => ({
+            range: `${range.start}-${range.end}`,
+            data: aggregateDataByYearRange(range.start, range.end)
+        }));
+        
+        console.log(count_data);
+
         // Determine the range of years and define months
-        const years = Array.from(d3.group(yearMonthData, (d) => d.year).keys()).sort((a, b) => a - b);
+        const ranges = Array.from(d3.group(count_data, d => d.range).keys()).sort((a,b) => a - b);
         const months = d3.range(0, 12); // 0=Jan, 11=Dec
 
         // Create scales
-        const xScale = d3.scaleBand().domain(months).range([0, width]).padding(0.05);
+        const xScale = d3.scaleBand()
+            .domain(d3.range(0, 12)) // Months are 0-indexed (0 = January, 11 = December)
+            .range([0, width])
+            .padding(0.05);
 
-        const yScale = d3.scaleBand().domain(years).range([0, height]).padding(0.05);
+        const yScale = d3.scaleBand()
+            .domain(count_data.map(d => d.range))
+            .range([0, height])
+            .padding(0.05);
 
         // Color scale based on counts
-        const countExtent = d3.extent(yearMonthData, (d) => d.count);
+        const countExtent = d3.extent(count_data.flatMap(range => range.data.map(d => d.count)));
         const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, countExtent[1]]);
 
-        // Draw the cells
-        g.selectAll('.cell')
-            .data(yearMonthData)
-            .join('rect')
-            .attr('class', 'cell')
-            .attr('x', (d) => xScale(d.month))
-            .attr('y', (d) => yScale(d.year))
-            .attr('width', xScale.bandwidth())
-            .attr('height', yScale.bandwidth())
-            .attr('fill', (d) => colorScale(d.count));
+        // Append the rows for each year range
+        const rows = g.selectAll(".row")
+            .data(count_data)
+            .enter().append("g")
+            .attr("class", "row")
+            .attr("transform", d => `translate(0,${yScale(d.range)})`);
+
+        // Append cells to each row
+        rows.selectAll(".cell")
+            .data(d => d.data)
+            .enter().append("rect")
+            .attr("class", "cell")
+            .attr("x", d => xScale(d.month))
+            .attr("width", xScale.bandwidth())
+            .attr("height", yScale.bandwidth())
+            .style("fill", d => colorScale(d.count));
+
 
         // Create axes
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
@@ -90,7 +135,7 @@ export const date_selection = {
             .attr('x', -height / 2)
             .attr('transform', 'rotate(-90)')
             .attr('text-anchor', 'middle')
-            .text('Year');
+            .text('Year Range');
 
         // Optional: Add a legend for the color scale
         const legendWidth = 200,
