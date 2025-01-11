@@ -1,26 +1,26 @@
-import TileLayer from "ol/layer/Tile";
-import { OSM } from "ol/source";
-import { View } from "ol";
+import TileLayer from 'ol/layer/Tile';
+import { OSM } from 'ol/source';
+import { View } from 'ol';
 import Map from 'ol/Map.js';
-import VectorSource from "ol/source/Vector";
-import { GeoJSON } from "ol/format";
-import VectorLayer from "ol/layer/Vector";
+import VectorSource from 'ol/source/Vector';
+import { GeoJSON } from 'ol/format';
+import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { Fill, Stroke, Style } from "ol/style";
-import CircleStyle from "ol/style/Circle";
-import { DragBox, Select } from "ol/interaction";
+import { Fill, Stroke, Style } from 'ol/style';
+import CircleStyle from 'ol/style/Circle';
+import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly } from "ol/events/condition";
-import { getWidth } from "ol/extent";
+import { platformModifierKeyOnly } from 'ol/events/condition';
+import { getWidth } from 'ol/extent';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
 
 // Default OSM layer
 const openStreetMap = new TileLayer({
-    source: new OSM()
+    source: new OSM(),
 });
 
 export const geo_map = {
@@ -32,11 +32,11 @@ export const geo_map = {
             source: new VectorSource({
                 features: new GeoJSON().readFeatures(earthquakeData, {
                     dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:3857'
-                })
+                    featureProjection: 'EPSG:3857',
+                }),
             }),
             style: earthquakeStyle,
-            visible: false
+            visible: false,
         });
 
         // Generate the heatmap layer
@@ -45,10 +45,10 @@ export const geo_map = {
         const heatmapSource = new VectorSource({
             features: new GeoJSON().readFeatures(earthquakeData, {
                 dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:3857'
-            })
+                featureProjection: 'EPSG:3857',
+            }),
         });
-        heatmapSource.getFeatures().forEach(feature => {
+        heatmapSource.getFeatures().forEach((feature) => {
             const magnitude = feature.get('Mag');
             // Arbitrary weight parameters
             // TODO: Weight things dynamically on zooming? Maybe tweak manually?
@@ -60,7 +60,7 @@ export const geo_map = {
             for (let lat = mapExtent[1]; lat <= mapExtent[3]; lat += step) {
                 const feature = new Feature({
                     geometry: new Point(olProj.fromLonLat([lon, lat])),
-                    weight: 0.01
+                    weight: 0.01,
                 });
                 heatmapSource.addFeature(feature);
             }
@@ -71,7 +71,7 @@ export const geo_map = {
             radius: 10,
             weight: 'weight',
             gradient: ['rgba(0, 0, 139, 0.5)', 'blue', 'green', 'yellow', 'red'],
-            visible: true
+            visible: true,
         });
 
         // Generate the tectonic plates layer
@@ -79,26 +79,21 @@ export const geo_map = {
             source: new VectorSource({
                 features: new GeoJSON().readFeatures(tectonicPlatesData, {
                     dataProjection: 'EPSG:4326',
-                    featureProjection: 'EPSG:3857'
-                })
+                    featureProjection: 'EPSG:3857',
+                }),
             }),
             style: new Style({
                 stroke: new Stroke({
                     color: 'blue',
-                    width: 2
-                })
-            })
-        })
+                    width: 2,
+                }),
+            }),
+        });
 
         // Create map
         const map = new Map({
             target: 'map',
-            layers: [
-                openStreetMap,
-                tectonicPlatesLayer,
-                heatmapLayer,
-                earthquakesLayer
-            ],
+            layers: [openStreetMap, tectonicPlatesLayer, heatmapLayer, earthquakesLayer],
             view: new View({
                 center: [0, 0],
                 zoom: 2,
@@ -111,8 +106,8 @@ export const geo_map = {
     },
     update(plots, data) {
         this.render(plots, data);
-    }
-}
+    },
+};
 
 // Default dot style for earthquakes
 const earthquakeStyle = function (feature) {
@@ -121,36 +116,45 @@ const earthquakeStyle = function (feature) {
         image: new CircleStyle({
             radius: size,
             fill: new Fill({
-                color: 'red'
-            })
-        })
-    })
-}
+                color: 'red',
+            }),
+        }),
+    });
+};
 
 // Dot style for selected earthquakes
 const selectedStyle = function (feature) {
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
         style.getImage().getFill().setColor('green');
-        return style
+        return style;
     }
     return new Style({
         stroke: new Stroke({
             color: 'green',
-            width: 2
-        })
-    })
-}
+            width: 2,
+        }),
+    });
+};
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
-
     const select = new Select({ style: selectedStyle });
     map.addInteraction(select);
 
-    map.on("click", function () {
+    map.on('click', function () {
         // TODO check whether a feature was actually clicked (and not the map)
         // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
-        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
+        const selectedData = earthquakeData.features.filter(
+            (d) =>
+                selectedFeatures
+                    .getArray()
+                    .map((f) => f.get('Mag'))
+                    .includes(d.properties.Mag) &&
+                selectedFeatures
+                    .getArray()
+                    .map((f) => f.get('Focal Depth (km)'))
+                    .includes(d.properties['Focal Depth (km)']),
+        );
 
         plots['date_selection'].update(plots, selectedData);
         plots['scatter_plot'].update(plots, selectedData);
@@ -183,7 +187,8 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
             const right = Math.min(boxExtent[2] - world * worldWidth, worldExtent[2]);
             const extent = [left, boxExtent[1], right, boxExtent[3]];
 
-            const boxFeatures = earthquakesLayer.getSource()
+            const boxFeatures = earthquakesLayer
+                .getSource()
                 .getFeaturesInExtent(extent)
                 .filter(
                     (feature) =>
@@ -223,7 +228,17 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
             }
         }
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
-        const selectedData = earthquakeData.features.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties.Mag) && selectedFeatures.getArray().map(f => f.get('Focal Depth (km)')).includes(d.properties["Focal Depth (km)"]));
+        const selectedData = earthquakeData.features.filter(
+            (d) =>
+                selectedFeatures
+                    .getArray()
+                    .map((f) => f.get('Mag'))
+                    .includes(d.properties.Mag) &&
+                selectedFeatures
+                    .getArray()
+                    .map((f) => f.get('Focal Depth (km)'))
+                    .includes(d.properties['Focal Depth (km)']),
+        );
 
         plots['scatter_plot'].update(plots, selectedData);
         plots['date_selection'].update(plots, selectedData);

@@ -24,14 +24,13 @@ plots['date_selection'].render(plots, earthquakeData.features);
 plots['detailed_view'].render(plots, undefined);
 
 // Interactive buttons
-d3.select("#resetButton").on("click", function () {
+d3.select('#resetButton').on('click', function () {
     plots['scatter_plot'].update(plots, earthquakeData.features);
     plots['date_selection'].update(plots, earthquakeData.features);
 });
 
-d3.select("#toggleView").on("click", function () {
+d3.select('#toggleView').on('click', function () {
     const heatmapVisible = heatmapLayer.getVisible();
     heatmapLayer.setVisible(!heatmapVisible);
     earthquakesLayer.setVisible(heatmapVisible);
 });
-
