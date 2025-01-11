@@ -141,9 +141,9 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
     const select = new Select({ style: selectedStyle });
     map.addInteraction(select);
 
+    // When a feature is clicked, update the date selection plot and the scatter plot
     map.on('click', function () {
-        // TODO check whether a feature was actually clicked (and not the map)
-        // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
+        const selectedFeatures = select.getFeatures();
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
@@ -156,9 +156,8 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                     .includes(d.properties['Focal Depth (km)']),
         );
 
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight']);
         plots['date_selection'].update(plots, selectedData);
-        plots['scatter_plot'].update(plots, selectedData);
-        plots['detailed_view'].update(plots, [selectedData[0], tsunamiDataFeatures]);
     });
 
     return select;
@@ -240,7 +239,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                     .includes(d.properties['Focal Depth (km)']),
         );
 
-        plots['scatter_plot'].update(plots, selectedData);
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight']);
         plots['date_selection'].update(plots, selectedData);
     });
 
