@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
-import { earthquakesLayer, heatmapLayer, geo_map } from './geo-map';
-import { scatter_plot } from './scatterplot';
-import { date_selection } from './date-selection';
-import { detailed_view } from './detailed-view';
+import { earthquakesLayer, heatmapLayer, geo_map } from './plots/geo-map';
+import { scatter_plot } from './plots/scatterplot';
+import { date_selection } from './plots/date-selection';
+import { detailed_view } from './plots/detailed-view';
 
 const plots = {};
 
