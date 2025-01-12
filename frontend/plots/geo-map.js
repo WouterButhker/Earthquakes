@@ -53,7 +53,7 @@ export const geo_map = {
                 }),
             }),
             style: earthquakeStyle,
-            visible: false,
+            visible: true,
         });
 
         // Generate the heatmap layer
@@ -88,7 +88,7 @@ export const geo_map = {
             radius: 10,
             weight: 'weight',
             gradient: ['rgba(0, 0, 139, 0.5)', 'blue', 'green', 'yellow', 'red'],
-            visible: true,
+            visible: false,
         });
 
         // Generate the tectonic plates layer
