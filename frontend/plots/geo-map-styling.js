@@ -66,8 +66,8 @@ export function getStyle(feature, colorProperty, sizeProperty) {
     const sizeValue = feature.get(sizeProperty);
 
     // Fallback to default styles if properties are missing or undefined
-    const color = (colorScales[colorProperty] || (() => "#000000"))(colorValue);
-    const size = (sizeScales[sizeProperty] || (() => 10))(sizeValue);
+    const color = (colorScales[colorProperty] || (() => "#888888"))(colorValue);
+    const size = (sizeScales[sizeProperty] || (() => 1))(sizeValue);
 
     // Return OpenLayers style
     return new Style({
