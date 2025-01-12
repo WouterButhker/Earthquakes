@@ -28,11 +28,13 @@ let size = d3.select("#size").property("value");
 
 d3.select("#size").on("change", function () {
     size = d3.select(this).property("value");
+    updateLegend(color, size);
     earthquakesLayer.getSource().changed();
 });
 
 d3.select("#color").on("change", function () {
     color = d3.select(this).property("value");
+    updateLegend(color, size);
     earthquakesLayer.getSource().changed();
 });
 
@@ -113,6 +115,8 @@ export const geo_map = {
                 zoom: 2,
             }),
         });
+
+        updateLegend(color, size);
 
         // Add interactions
         const select = addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots);
@@ -290,15 +294,15 @@ function getStyle(feature, colorProperty, sizeProperty) {
         "MMI Int": (value) =>
             value ? `rgba(255, ${255 - value * 20}, ${value * 20}, 0.7)` : "#99ccff",
         "Total Death Description": (value) =>
-            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value - 1] : "#cccccc",
+            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value] : "#cccccc",
         "Total Injuries Description": (value) =>
-            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value - 1] : "#cccccc",
+            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value] : "#cccccc",
         "Total Damage Description": (value) =>
-            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value - 1] : "#cccccc",
+            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value] : "#cccccc",
         "Total Houses Destroyed Description": (value) =>
-            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value - 1] : "#cccccc",
+            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value] : "#cccccc",
         "Total Houses Damaged Description": (value) =>
-            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value - 1] : "#cccccc",
+            value ? ["#88cc88", "#ffcc00", "#ff9933", "#ff6666", "#cc0000"][value] : "#cccccc",
     };
 
     const defaultSize = 1;
@@ -332,4 +336,158 @@ function getStyle(feature, colorProperty, sizeProperty) {
             stroke: new Stroke({ color: "#333333", width: 1 }),
         }),
     });
+}
+
+/**
+ * Discrete color mappings that match those in getStyle().
+ * Adjust as needed to mirror your actual color scales.
+ */
+const colorMapping = {
+    "Tsu": [
+        { label: "No Tsunami", color: "#888888" },
+        { label: "Tsunami",    color: "rgba(0, 0, 255, 0.7)" }
+    ],
+    "Mag": [
+        // Example magnitudes
+        { label: "Magnitude 2",  color: "rgba(255, 255 - 2*25, 0, 0.7)" },
+        { label: "Magnitude 5",  color: "rgba(255, 255 - 5*25, 0, 0.7)" },
+        { label: "Magnitude 7",  color: "rgba(255, 255 - 7*25, 0, 0.7)" },
+        { label: "Magnitude 9+", color: "rgba(255, 255 - 9*25, 0, 0.7)" }
+    ],
+
+    "MMI Int": [
+        { label: "Intensity 2",  color: `rgba(255, ${255 - 2 * 20}, ${2 * 20}, 0.7)` },
+        { label: "Intensity 5",  color: `rgba(255, ${255 - 5 * 20}, ${5 * 20}, 0.7)` },
+        { label: "Intensity 7",  color: `rgba(255, ${255 - 7 * 20}, ${7 * 20}, 0.7)` },
+        { label: "Intensity 9+", color: `rgba(255, ${255 - 9 * 20}, ${9 * 20}, 0.7)` },
+    ],
+    "Total Death Description": [
+        { label: "None", color: "#88cc88" },
+        { label: "Few (~1 to 50 deaths)", color: "#ffcc00" },
+        { label: "Some (~51 to 100 deaths)", color: "#ff9933" },
+        { label: "Many (~101 to 1000 deaths)", color: "#ff6666" },
+        { label: "Very many (over 1000 deaths)", color: "#cc0000" }
+    ],
+    "Total Injuries Description": [
+        { label: "None", color: "#88cc88" },
+        { label: "Few (~1 to 50 injuries)", color: "#ffcc00" },
+        { label: "Some(~51 to 100 injuries)", color: "#ff9933" },
+        { label: "Many (~101 to 1000 injuries)", color: "#ff6666" },
+        { label: "Very many (over 1000 injuries)", color: "#cc0000" }
+    ],
+    "Total Damage Description": [
+        { label: "None", color: "#88cc88" },
+        { label: "Limited (roughly corresponding to less than $1 million)", color: "#ffcc00" },
+        { label: "Moderate (~$1 to $5 million)", color: "#ff9933" },
+        { label: "Severe (~$5 to $25 million)", color: "#ff6666" },
+        { label: "Extreme (~$25 million or more)", color: "#cc0000" }
+    ],
+    "Total Houses Destroyed Description": [
+        { label: "None", color: "#88cc88" },
+        { label: "Few (~1 to 50 houses)", color: "#ffcc00" },
+        { label: "Some (~51 to 100 houses)", color: "#ff9933" },
+        { label: "Many (~101 to 1000 houses)", color: "#ff6666" },
+        { label: "Very many (over 1000 houses)", color: "#cc0000" }
+    ],
+    "Total Houses Damaged Description": [
+        { label: "None", color: "#88cc88" },
+        { label: "Few (~1 to 50 houses)", color: "#ffcc00" },
+        { label: "Some (~51 to 100 houses)", color: "#ff9933" },
+        { label: "Many (~101 to 1000 houses)", color: "#ff6666" },
+        { label: "Very many (over 1000 houses)", color: "#cc0000" }
+    ]
+};
+
+/**
+ * Example size checkpoints for each size property
+ * (these are just “sample” reference values).
+ */
+const sizeSamples = {
+    "Mag": [2, 5, 7, 9],
+    "Focal Depth (km)": [10, 50, 100, 300],
+    "MMI Int": [2, 5, 7, 9],
+    "Total Deaths": [1, 100, 1000, 10000],
+    "Total Injuries": [1, 100, 1000, 10000],
+    "Total Damage ($Mil)": [1, 100, 1000, 10000],
+    "Total Houses Destroyed": [1, 100, 1000, 10000],
+    "Total Houses Damaged": [1, 100, 1000, 10000]
+};
+
+/**
+ * Rebuild the legend contents based on the currently selected color/size properties.
+ * @param {string} currentColor - The color property (as selected in #color)
+ * @param {string} currentSize  - The size property (as selected in #size)
+ */
+export function updateLegend(currentColor, currentSize) {
+    const legendEl = document.getElementById("legend");
+    if (!legendEl) return;
+
+    let html = "";
+
+    // 1) Show a color legend for the currently active color property
+    //    (ONLY if it's not 'Country' and we have a mapping for it)
+    if (currentColor !== "Country" && colorMapping[currentColor]) {
+        html += `<div class="legend-section">
+               <h3>Color Legend: ${currentColor}</h3>`;
+
+        colorMapping[currentColor].forEach(({ label, color }) => {
+            html += `
+        <div class="legend-item">
+          <div class="color-box" style="background:${color}"></div>
+          <div>${label}</div>
+        </div>
+      `;
+        });
+        html += `</div>`;
+    }
+
+    // 2) Show a size legend for the currently selected size property
+    if (sizeSamples[currentSize]) {
+        html += `<div class="legend-section">
+               <h3>Size Legend: ${currentSize}</h3>`;
+        sizeSamples[currentSize].forEach((value) => {
+            const radius = computeRadius(currentSize, value);
+            html += `
+        <div class="legend-item">
+          <span 
+            class="circle-sample" 
+            style="width:${2 * radius}px;height:${2 * radius}px;background:#999">
+          </span>
+          <span>${value}</span>
+        </div>`;
+        });
+        html += `</div>`;
+    }
+
+    legendEl.innerHTML = html;
+}
+
+/**
+ * Approximate the size radius from your getStyle() logic
+ * so the user can interpret the circle sizes in the legend.
+ */
+function computeRadius(sizeProp, val) {
+    const defaultSize = 1;
+    const scalingFactor = 2;
+
+    switch (sizeProp) {
+        case "Mag":
+            // value ? value * 1.5 : defaultSize
+            return val ? val * 1.5 : defaultSize;
+        case "Focal Depth (km)":
+            // value ? Math.log(value + 1) * 3 : defaultSize
+            return val ? Math.log(val + 1) * 3 : defaultSize;
+        case "MMI Int":
+            // value ? value * 1.5 : defaultSize
+            return val ? val * 1.5 : defaultSize;
+        case "Total Deaths":
+        case "Total Injuries":
+        case "Total Damage ($Mil)":
+        case "Total Houses Destroyed":
+        case "Total Houses Damaged":
+            // value ? Math.log(value + 1) * scalingFactor : defaultSize
+            return val ? Math.log(val + 1) * scalingFactor : defaultSize;
+        default:
+            return defaultSize;
+    }
 }
