@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 export const date_selection = {
     render(plots, data) {
         let earthquakeDataFeatures = data;
+        console.log(earthquakeDataFeatures);
 
         const margin = { top: 50, right: 30, bottom: 50, left: 60 },
             width = 450 - margin.left - margin.right,
@@ -44,7 +45,7 @@ export const date_selection = {
         const maxYear = d3.max(all_years);
 
         // Define the range size, e.g., every 5 years
-        const rangeSize = 500;
+        const rangeSize = 300;
 
         // Create year ranges
         let yearRanges = [];
@@ -60,7 +61,7 @@ export const date_selection = {
             return d3.rollups(filteredData, 
                 v => d3.sum(v, leaf => leaf.count), // Summing function
                 d => d.month // Grouping function
-            ).map(([month, count]) => ({ month, count }));
+            ).map(([month, count]) => ({ month, count}));
         }
         
         // Iterate over each year range and store results
@@ -69,11 +70,18 @@ export const date_selection = {
             data: aggregateDataByYearRange(range.start, range.end)
         }));
         
-        console.log(count_data);
 
         // Determine the range of years and define months
-        const ranges = Array.from(d3.group(count_data, d => d.range).keys()).sort((a,b) => a - b);
-        const months = d3.range(0, 12); // 0=Jan, 11=Dec
+        // const ranges = Array.from(d3.group(count_data, d => d.range).keys()).sort((a,b) => a - b);
+        // const months = d3.range(0, 12); // 0=Jan, 11=Dec
+
+        function selectData(startYear, endYear){
+            const selectedData = earthquakeDataFeatures.filter(feature => {
+            const year = parseInt(feature.properties.Year);
+            return year >= startYear && year <= endYear;
+            });
+            return selectedData;
+        }
 
         // Create scales
         const xScale = d3.scaleBand()
@@ -119,7 +127,18 @@ export const date_selection = {
 
         g.append('g').attr('transform', `translate(0,${height})`).call(xAxis);
 
-        g.append('g').call(yAxis);
+        g.append('g')
+            .call(yAxis)
+            .selectAll('.tick') // Selecting all the y-axis ticks which are bound to your year range data
+            .on('click', (event, d) => {
+                const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
+                const startYear = yearRange[0];
+                const endYear = yearRange[1];
+                console.log(startYear, endYear);
+                let selectedData = selectData(startYear, endYear);   
+
+                plots['date_selection'].update(plots, selectedData);
+            });
 
         // Axis labels
         g.append('text')
