@@ -42,6 +42,10 @@
     cursor: default;
 }
 
+.ol-attribution {
+    visibility: hidden;
+}
+
 
 
 

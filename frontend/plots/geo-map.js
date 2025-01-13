@@ -185,6 +185,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 }
 
 function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots) {
+    // from: https://openlayers.org/en/latest/examples/box-selection.html
     const dragBox = new DragBox({
         condition: platformModifierKeyOnly,
     });
