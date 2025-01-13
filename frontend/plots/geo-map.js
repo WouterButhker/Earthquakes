@@ -8,10 +8,10 @@ import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import {Circle, Fill, Stroke, Style} from 'ol/style';
+import {Stroke, Style} from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly } from 'ol/events/condition';
+import {platformModifierKeyOnly, click, pointerMove} from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from "d3";
 import {getStyle, updateLegend} from "./geo-map-styling";
@@ -121,7 +121,7 @@ export const geo_map = {
 
         // Add interactions
         const select = addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots);
-        const dragBox = addDragBoxInteraction(map, select, earthquakeData, plots);
+        const dragBox = addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots);
     },
     update(plots, data) {
         this.render(plots, data);
@@ -132,13 +132,18 @@ const earthquakeStyle = function (feature) {
     return getStyle(feature, color, size);
 };
 
-// Dot style for selected earthquakes
+
 const selectedStyle = function (feature) {
+    // Dot style for selected earthquakes
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
-        style.getImage().getFill().setColor('green');
+        style.getImage().getFill().setColor('#738cfd');
+        const stroke = new Stroke({ color: "#000000", width: 2 })
+        style.getImage().setStroke(stroke);
         return style;
     }
+
+    // style for selected lines
     return new Style({
         stroke: new Stroke({
             color: 'green',
@@ -148,12 +153,21 @@ const selectedStyle = function (feature) {
 };
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
-    const select = new Select({ style: selectedStyle });
+    const select = new Select({
+        style: selectedStyle,
+        condition: click
+    });
     map.addInteraction(select);
 
-    map.on('click', function () {
-        // TODO check whether a feature was actually clicked (and not the map)
-        // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
+    select.on('select', function () {
+        const selectedFeatures = select.getFeatures();
+        if (selectedFeatures.getArray().length !== 0) {
+            // get the earthquake from the earthquakeData that has the same id as the selected datapoint
+            const selectedDataPoint = earthquakeData.features.filter(
+                (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
+            )[0];
+            plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+        }
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
@@ -165,16 +179,15 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                     .map((f) => f.get('Focal Depth (km)'))
                     .includes(d.properties['Focal Depth (km)']),
         );
-
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
-        plots['scatter_plot'].update(plots, selectedData);
-        plots['detailed_view'].update(plots, [selectedData[0], tsunamiDataFeatures]);
     });
 
     return select;
 }
 
-function addDragBoxInteraction(map, select, earthquakeData, plots) {
+function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots) {
+    // from: https://openlayers.org/en/latest/examples/box-selection.html
     const dragBox = new DragBox({
         condition: platformModifierKeyOnly,
     });
@@ -237,6 +250,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                 selectedFeatures.extend(boxFeatures);
             }
         }
+        // TODO filter this based on what has been selected as axes in the scatterplot
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
         const selectedData = earthquakeData.features.filter(
             (d) =>
@@ -250,7 +264,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                     .includes(d.properties['Focal Depth (km)']),
         );
 
-        plots['scatter_plot'].update(plots, selectedData);
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
     });
 
