@@ -8,12 +8,13 @@ import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { Fill, Stroke, Style } from 'ol/style';
-import CircleStyle from 'ol/style/Circle';
+import {Stroke, Style} from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly } from 'ol/events/condition';
+import {platformModifierKeyOnly, click, pointerMove} from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
+import * as d3 from "d3";
+import {getStyle, updateLegend} from "./geo-map-styling";
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
@@ -22,6 +23,22 @@ export let heatmapLayer = null;
 const openStreetMap = new TileLayer({
     source: new OSM(),
 });
+
+let color = d3.select("#color").property("value");
+let size = d3.select("#size").property("value");
+
+d3.select("#size").on("change", function () {
+    size = d3.select(this).property("value");
+    updateLegend(color, size);
+    earthquakesLayer.getSource().changed();
+});
+
+d3.select("#color").on("change", function () {
+    color = d3.select(this).property("value");
+    updateLegend(color, size);
+    earthquakesLayer.getSource().changed();
+});
+
 
 export const geo_map = {
     render(plots, data) {
@@ -100,6 +117,8 @@ export const geo_map = {
             }),
         });
 
+        updateLegend(color, size);
+
         // Add interactions
         const select = addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots);
         const dragBox = addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots);
@@ -109,26 +128,22 @@ export const geo_map = {
     },
 };
 
-// Default dot style for earthquakes
 const earthquakeStyle = function (feature) {
-    let size = feature.get('Mag') ? feature.get('Mag') : 5;
-    return new Style({
-        image: new CircleStyle({
-            radius: size,
-            fill: new Fill({
-                color: 'red',
-            }),
-        }),
-    });
+    return getStyle(feature, color, size);
 };
 
-// Dot style for selected earthquakes
+
 const selectedStyle = function (feature) {
+    // Dot style for selected earthquakes
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
-        style.getImage().getFill().setColor('green');
+        style.getImage().getFill().setColor('#738cfd');
+        const stroke = new Stroke({ color: "#000000", width: 2 })
+        style.getImage().setStroke(stroke);
         return style;
     }
+
+    // style for selected lines
     return new Style({
         stroke: new Stroke({
             color: 'green',
@@ -138,11 +153,13 @@ const selectedStyle = function (feature) {
 };
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
-    const select = new Select({ style: selectedStyle });
+    const select = new Select({
+        style: selectedStyle,
+        condition: click
+    });
     map.addInteraction(select);
-    // When a datapoint is clicked, update the detailed view with the selected datapoint
-    // And update the dateselection and scatterplot with the full data filtered by the selected datapoint    
-    map.on('click', function () {
+
+    select.on('select', function () {
         const selectedFeatures = select.getFeatures();
         if (selectedFeatures.getArray().length !== 0) {
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
@@ -170,6 +187,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 }
 
 function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots) {
+    // from: https://openlayers.org/en/latest/examples/box-selection.html
     const dragBox = new DragBox({
         condition: platformModifierKeyOnly,
     });
@@ -255,3 +273,4 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         selectedFeatures.clear();
     });
 }
+
