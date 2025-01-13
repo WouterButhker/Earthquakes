@@ -32,12 +32,10 @@ export const scatter_plot = {
             // Clear the SVG
             svg.selectAll('*').remove();
 
-            svg.attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom);
+            svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
 
             // Create a group for the plot
-            const plotGroup = svg.append('g')
-                .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            const plotGroup = svg.append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
 
             // Define scales
             const xExtent = d3.extent(points, (d) => d.x_value);
@@ -45,12 +43,22 @@ export const scatter_plot = {
             // TODO if the maximum value is above 1.000, make the scale logarithmic
             var xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
             if (xExtent[1] > 1000) {
-                xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);   
+                xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
             }
 
-            var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            var yScale = d3
+                .scaleLinear()
+                .domain([0, yExtent[1]])
+                .nice()
+                .range([height, 0])
+                .unknown(height - margin.bottom);
             if (yExtent[1] > 1000) {
-                yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+                yScale = d3
+                    .scaleSymlog()
+                    .domain([0.1, yExtent[1]])
+                    .nice()
+                    .range([height, 0])
+                    .unknown(height - margin.bottom);
             }
 
             // Add axes
@@ -58,15 +66,13 @@ export const scatter_plot = {
             const yAxis = d3.axisLeft(yScale);
 
             // Append axes to the plot group
-            plotGroup.append('g')
-                .attr('transform', `translate(0, ${height})`)
-                .call(xAxis);
+            plotGroup.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
 
-            plotGroup.append('g')
-                .call(yAxis);
+            plotGroup.append('g').call(yAxis);
 
             // Add axis labels
-            plotGroup.append('text')
+            plotGroup
+                .append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', `translate(${width / 2}, ${height + 40})`)
                 .style('text-anchor', 'middle')
@@ -74,7 +80,8 @@ export const scatter_plot = {
                 .style('fill', 'black')
                 .text(xaxis_label);
 
-            plotGroup.append('text')
+            plotGroup
+                .append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', 'rotate(-90)')
                 .attr('y', -margin.left + 15)
@@ -83,11 +90,12 @@ export const scatter_plot = {
                 .style('font-size', '12px')
                 .style('fill', 'black')
                 .text(yaxis_label);
-            
+
             // TODO rotate the labels if a log scale is used
 
             // Plot the points as circles
-            plotGroup.selectAll('circle')
+            plotGroup
+                .selectAll('circle')
                 .data(points)
                 .join('circle')
                 .attr('cx', (d) => xScale(d.x_value))
@@ -99,7 +107,10 @@ export const scatter_plot = {
 
             // Undefined dots are displayed in red
             // TODO remove this because the data is already filtered before plotting
-            plotGroup.selectAll('circle').filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
+            plotGroup
+                .selectAll('circle')
+                .filter((d) => d.x_value === undefined || d.y_value === undefined)
+                .attr('fill', 'red');
 
             // Click behaviour
             // TODO this does not work but it has to be fixed
@@ -121,18 +132,22 @@ export const scatter_plot = {
             // from https://observablehq.com/@d3/brushable-scatterplot
             // TODO only when ctrl is pressed
             // Brushing behavior
-            const brush = d3.brush()
+            const brush = d3
+                .brush()
                 .filter((event) => event.ctrlKey)
                 .on('start brush end', ({ selection }) => {
                     let value = [];
                     if (selection) {
                         const [[x0, y0], [x1, y1]] = selection;
-                        value = plotGroup.selectAll('circle')
+                        value = plotGroup
+                            .selectAll('circle')
                             .style('fill', 'black')
                             .filter(
                                 (d) =>
-                                    x0 <= xScale(d.x_value) && xScale(d.x_value) < x1 &&
-                                    y0 <= yScale(d.y_value) && yScale(d.y_value) < y1,
+                                    x0 <= xScale(d.x_value) &&
+                                    xScale(d.x_value) < x1 &&
+                                    y0 <= yScale(d.y_value) &&
+                                    yScale(d.y_value) < y1,
                             )
                             .style('fill', 'green')
                             .data();
@@ -146,7 +161,7 @@ export const scatter_plot = {
                     } else {
                         plotGroup.selectAll('circle').style('fill', 'black');
                     }
-                })
+                });
 
             plotGroup.call(brush);
 
@@ -157,7 +172,7 @@ export const scatter_plot = {
             // const zoom = d3.zoom()
             // .scaleExtent([0.5, 32])
             // .on("zoom", zoomed);
-            
+
             // svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
 
             // function zoomed({transform}) {

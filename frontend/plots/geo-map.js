@@ -8,13 +8,13 @@ import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import {Stroke, Style} from 'ol/style';
+import { Stroke, Style } from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import {platformModifierKeyOnly, click, pointerMove} from 'ol/events/condition';
+import { platformModifierKeyOnly, click, pointerMove } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
-import * as d3 from "d3";
-import {getStyle, updateLegend} from "./geo-map-styling";
+import * as d3 from 'd3';
+import { getStyle, updateLegend } from './geo-map-styling';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
@@ -24,21 +24,20 @@ const openStreetMap = new TileLayer({
     source: new OSM(),
 });
 
-let color = d3.select("#color").property("value");
-let size = d3.select("#size").property("value");
+let color = d3.select('#color').property('value');
+let size = d3.select('#size').property('value');
 
-d3.select("#size").on("change", function () {
-    size = d3.select(this).property("value");
+d3.select('#size').on('change', function () {
+    size = d3.select(this).property('value');
     updateLegend(color, size);
     earthquakesLayer.getSource().changed();
 });
 
-d3.select("#color").on("change", function () {
-    color = d3.select(this).property("value");
+d3.select('#color').on('change', function () {
+    color = d3.select(this).property('value');
     updateLegend(color, size);
     earthquakesLayer.getSource().changed();
 });
-
 
 export const geo_map = {
     render(plots, data) {
@@ -132,13 +131,12 @@ const earthquakeStyle = function (feature) {
     return getStyle(feature, color, size);
 };
 
-
 const selectedStyle = function (feature) {
     // Dot style for selected earthquakes
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
         style.getImage().getFill().setColor('#738cfd');
-        const stroke = new Stroke({ color: "#000000", width: 2 })
+        const stroke = new Stroke({ color: '#000000', width: 2 });
         style.getImage().setStroke(stroke);
         return style;
     }
@@ -155,7 +153,7 @@ const selectedStyle = function (feature) {
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
     const select = new Select({
         style: selectedStyle,
-        condition: click
+        condition: click,
     });
     map.addInteraction(select);
 
@@ -273,4 +271,3 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         selectedFeatures.clear();
     });
 }
-

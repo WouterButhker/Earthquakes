@@ -26,7 +26,9 @@ export const detailed_view = {
 
             // TODO filter the list of properties to only show the relevant properties
 
-            var new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.properties[d]).join("<br>");
+            var new_detailed_text = listofProperties
+                .map((d) => d + ': ' + selectedDataPoint.properties[d])
+                .join('<br>');
 
             const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
             // If there is a related tsunami, join the related tsunami to the detailed text
@@ -46,7 +48,7 @@ function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
         return 'No related tsunamis';
     } else {
         const selectedData = tsunamiDataFeatures.filter((d) => d.properties.Id == tsunamiID);
-        console.log("related tsunami data: ", selectedData);
+        console.log('related tsunami data: ', selectedData);
         return selectedData[0].properties['Location Name'];
     }
 }
