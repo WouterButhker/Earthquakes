@@ -3,7 +3,6 @@ import * as d3 from 'd3';
 export const date_selection = {
     render(plots, data) {
         let earthquakeDataFeatures = data;
-        console.log(earthquakeDataFeatures);
 
         const margin = { top: 50, right: 30, bottom: 50, left: 60 },
             width = 450 - margin.left - margin.right,
@@ -19,42 +18,91 @@ export const date_selection = {
 
         const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-        // Extract month/year from timestamp and count occurrences
         const counts = d3.rollup(
             earthquakeDataFeatures,
-            (v) => v.length,
+            (v) => v.length, // Counting occurrences
+            (d) => parseInt(d.properties.Year),
             (d) => {
-                return parseInt(d.properties.Year);
-            },
-            (d) => {
-                return parseInt(d.properties.Mo - 1); // 0-based month: 0 = January
-            },
+                // Default to January (0) if the month is undefined or invalid
+                const month = parseInt(d.properties.Mo);
+                return isNaN(month) ? 0 : month - 1; // 0-based month, adjust if necessary
+            }
         );
 
-        // Convert the rollup to a flat array for easier scales
-        // This array will look like: [{year: ..., month: ..., count: ...}, ...]
+        // Find the range of years in the dataset
+        const minYear = d3.min(earthquakeDataFeatures, d => parseInt(d.properties.Year));
+        const maxYear = d3.max(earthquakeDataFeatures, d => parseInt(d.properties.Year));
+
+
+        // Determine the range of years in the dataset
+        const yearExtent = d3.extent(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
+
+        // Generate full year and month data
         let yearMonthData = [];
-        for (let [year, monthMap] of counts.entries()) {
+        for (let year = yearExtent[0]; year <= yearExtent[1]; year++) {
+            let monthMap = counts.get(year);
+            if (!monthMap) {
+                monthMap = new Map(Array.from({ length: 12 }, (_, i) => [i, 0])); // Create empty month map for missing years
+            } else {
+                // Ensure all months are present in the monthMap
+                for (let i = 1; i < 12; i++) {
+                    if (!monthMap.has(i)) {
+                        monthMap.set(i, 0); // Set count to 0 for missing months
+                    }
+                }
+            }
+
             for (let [month, count] of monthMap.entries()) {
                 yearMonthData.push({ year, month, count });
             }
         }
 
+        console.log(yearMonthData);
+
         const all_years = yearMonthData.map(d => d.year);
-        const minYear = d3.min(all_years);
-        const maxYear = d3.max(all_years);
+        // const minYear = d3.min(all_years);
+        // const maxYear = d3.max(all_years);
+        
+        let uniqueYears = new Set(all_years);
+        let numUniqueYears = uniqueYears.size;
 
-        // Define the range size, e.g., every 5 years
-        const rangeSize = 300;
+        let rangeSize = 0;
+        let yrRange = Math.abs(minYear - maxYear);
 
-        // Create year ranges
-        let yearRanges = [];
-        for (let start = minYear; start <= maxYear; start += rangeSize) {
-            yearRanges.push({
-                start: start,
-                end: Math.min(start + rangeSize - 1, maxYear)
-            });
+
+        console.log(`unique years: ${numUniqueYears}`);
+        console.log(`min and max years: ${minYear} - ${maxYear}`);
+        console.log(`Year range: ${yrRange}`);
+
+        if (yrRange > 500){
+            rangeSize = 500;
         }
+        else if (yrRange > 100 && yrRange <= 500){
+            rangeSize = 100;
+        }
+        else if (yrRange > 10 && yrRange <= 100){
+            rangeSize = 10;
+        }
+        else if (yrRange >= 0 && yrRange <= 10){
+            rangeSize = 1;
+        }
+
+        console.log(`Range size: ${rangeSize}`);
+
+        let yearRanges = [];
+
+        function createYearRanges(minYear, maxYear, rangeSize){
+            for (let start = minYear; start <= maxYear; start += rangeSize) {
+                yearRanges.push({
+                    start: start,
+                    end: Math.min(start + rangeSize - 1, maxYear)
+                });
+            }
+            return yearRanges;
+        }
+        
+        yearRanges = createYearRanges(minYear, maxYear, rangeSize);
+        
 
         function aggregateDataByYearRange(startYear, endYear) {
             const filteredData = yearMonthData.filter(d => d.year >= startYear && d.year <= endYear);
@@ -70,10 +118,7 @@ export const date_selection = {
             data: aggregateDataByYearRange(range.start, range.end)
         }));
         
-
-        // Determine the range of years and define months
-        // const ranges = Array.from(d3.group(count_data, d => d.range).keys()).sort((a,b) => a - b);
-        // const months = d3.range(0, 12); // 0=Jan, 11=Dec
+        console.log(count_data);
 
         function selectData(startYear, endYear){
             const selectedData = earthquakeDataFeatures.filter(feature => {
@@ -115,7 +160,6 @@ export const date_selection = {
             .attr("height", yScale.bandwidth())
             .style("fill", d => colorScale(d.count));
 
-
         // Create axes
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
             // Format month numbers to names
@@ -135,7 +179,7 @@ export const date_selection = {
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
                 console.log(startYear, endYear);
-                let selectedData = selectData(startYear, endYear);   
+                let selectedData = selectData(startYear, endYear);  
 
                 plots['date_selection'].update(plots, selectedData);
             });
