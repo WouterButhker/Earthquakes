@@ -9,6 +9,12 @@ export const detailed_view = {
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
+        console.log(selectedDataPoint);
+
+        if (selectedDataPoint === undefined) {
+            d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+        }
+
         const detailed_text = d3.select('#detailed_text').select('text');
 
         if (selectedDataPoint === undefined) {
@@ -16,13 +22,20 @@ export const detailed_view = {
             detailed_text.text('[no earthquake selected]');
         } else {
             // Get a list of all the available properties of the selectedDataPoint
-            const listofProperties = Object.keys(selectedDataPoint.getProperties());
-            // TODO set each property to a new line
-            const new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.getProperties()[d]).join("<br>");
+            const listofProperties = Object.keys(selectedDataPoint.properties);
+
+            // TODO filter the list of properties to only show the relevant properties
+
+            var new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.properties[d]).join("<br>");
+
+            const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
+            // If there is a related tsunami, join the related tsunami to the detailed text
+            if (related_tsunami !== 'No related tsunamis') {
+                new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;
+            }
+
             // set html text as the new detailed text
             detailed_text.html(new_detailed_text);
-            // text_date.text(getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year));
-            // text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
         }
     },
 };
@@ -33,7 +46,7 @@ function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
         return 'No related tsunamis';
     } else {
         const selectedData = tsunamiDataFeatures.filter((d) => d.properties.Id == tsunamiID);
-        console.log(selectedData);
+        console.log("related tsunami data: ", selectedData);
         return selectedData[0].properties['Location Name'];
     }
 }

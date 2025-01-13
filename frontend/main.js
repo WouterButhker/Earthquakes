@@ -25,11 +25,30 @@ plots['detailed_view'].render(plots, undefined);
 
 // Interactive buttons
 d3.select('#resetButton').on('click', function () {
-    plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Mag', 'Focal Depth (km)']);
     // set the value of the selectButtonXaxis and selectButtonYaxis to the default values
     d3.select("#selectButtonXaxis").property("value", "Mag");
     d3.select("#selectButtonYaxis").property("value", "Focal Depth (km)");
+    plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Mag', 'Focal Depth (km)']);
     plots['date_selection'].update(plots, earthquakeData.features);
+    plots['detailed_view'].update(plots, [undefined, undefined]);
+});
+
+d3.select('#pointOfInterest1').on('click', function () {
+  // get the earthquake that has an id of "3227"
+  // TODO add text from website in placeholders
+  const interestPoint = earthquakeData.features.filter(d => d.properties.Id == "3227");
+  plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Total Missing', 'Focal Depth (km)']);
+  plots['scatter_plot'].update(plots, [interestPoint, 'highlight', 'Total Missing', 'Focal Depth (km)']);
+  plots['date_selection'].update(plots, interestPoint);
+  plots['detailed_view'].update(plots, [interestPoint[0], tsunamiData.features]);
+});
+d3.select('#pointOfInterest2').on('click', function () {
+  // get the earthquake that has an id of "7843"
+  const interestPoint = earthquakeData.features.filter(d => d.properties.Id == "7843");
+  plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Total Houses Destroyed', 'Total Injuries']);
+  plots['scatter_plot'].update(plots, [interestPoint, 'highlight', 'Total Houses Destroyed', 'Total Injuries']);
+  plots['date_selection'].update(plots, interestPoint);
+  plots['detailed_view'].update(plots, [interestPoint[0], tsunamiData.features]);
 });
 
 d3.select('#toggleView').on('click', function () {
@@ -38,8 +57,8 @@ d3.select('#toggleView').on('click', function () {
     earthquakesLayer.setVisible(heatmapVisible);
 });
 // Options for both the dropdowns of the axis in the scatterplot
-const scatterplot_xaxis_options = ["Mag", "Focal Depth (km)", "MMI Int", "Total Death", "Total Missing", "Total Injuries", "Total Damage", "Total Houses Destroyed", "Total Houses Damaged"];
-const scatterplot_yaxis_options = ["Focal Depth (km)", "Mag", "MMI Int", "Total Death", "Total Missing", "Total Injuries", "Total Damage", "Total Houses Destroyed", "Total Houses Damaged"];
+const scatterplot_xaxis_options = ["Mag", "Focal Depth (km)", "MMI Int", "Total Deaths", "Total Missing", "Total Injuries", "Total Damage ($Mil)", "Total Houses Destroyed", "Total Houses Damaged"];
+const scatterplot_yaxis_options = ["Focal Depth (km)", "Mag", "MMI Int", "Total Deaths", "Total Missing", "Total Injuries", "Total Damage ($Mil)", "Total Houses Destroyed", "Total Houses Damaged"];
 
 const scatterplot_categorical_options = ["Country", "MMI Int", "Total Death Description", "Total Missing Description", "Total Injuries Description", "Total Damage Description", "Total Houses Destroyed Description", "Total Houses Damaged Description"];
 

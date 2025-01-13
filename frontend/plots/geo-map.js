@@ -145,8 +145,10 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
     map.on('click', function () {
         const selectedFeatures = select.getFeatures();
         if (selectedFeatures.getArray().length !== 0) {
-            // print all properties and values of the selected datapoint
-            const selectedDataPoint = selectedFeatures.getArray()[0];
+            // get the earthquake from the earthquakeData that has the same id as the selected datapoint
+            const selectedDataPoint = earthquakeData.features.filter(
+                (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
+            )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
         }
         const selectedData = earthquakeData.features.filter(

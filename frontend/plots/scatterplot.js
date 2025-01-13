@@ -42,10 +42,16 @@ export const scatter_plot = {
             // Define scales
             const xExtent = d3.extent(points, (d) => d.x_value);
             const yExtent = d3.extent(points, (d) => d.y_value);
+            // TODO if the maximum value is above 1.000, make the scale logarithmic
+            var xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
+            if (xExtent[1] > 1000) {
+                xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);   
+            }
 
-            const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
-
-            const yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            if (yExtent[1] > 1000) {
+                yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            }
 
             // Add axes
             const xAxis = d3.axisBottom(xScale);
@@ -77,6 +83,8 @@ export const scatter_plot = {
                 .style('font-size', '12px')
                 .style('fill', 'black')
                 .text(yaxis_label);
+            
+            // TODO rotate the labels if a log scale is used
 
             // Plot the points as circles
             plotGroup.selectAll('circle')
@@ -94,27 +102,28 @@ export const scatter_plot = {
             plotGroup.selectAll('circle').filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
 
             // Click behaviour
-            // TODO check if this is still needed and if it works
-            svg.on('click', function (chosenEvent) {
-                // Make the chosen point green and all others black
-                // d3.selectAll("circle").attr("fill", "black");
-                // d3.select(chosenEvent.srcElement).attr("fill", "green");
+            // TODO this does not work but it has to be fixed
+            // plotGroup.on('click', function (chosenEvent) {
+            //     // Make the chosen point green and all others black
+            //     d3.selectAll("circle").attr("fill", "black");
+            //     // d3.select(chosenEvent.srcElement).attr("fill", "green");
 
-                // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
-                // const selectedData = earthquakeDataFeatures.filter(d => selectedFeatures.getArray().map(f => f.get('Mag')).includes(d.properties[xaxis_label]) && selectedFeatures.getArray().map(f => f.get(yaxis_label)).includes(d.properties["Focal Depth (km)"]));
-                const selectedDataFeatures = earthquakeDataFeatures.filter(
-                    (d) =>
-                        d.properties[xaxis_label] == chosenEvent.srcElement.__data__.x_value &&
-                        d.properties[yaxis_label] == chosenEvent.srcElement.__data__.y_value,
-                );
-                plots['date_selection'].update(plots, selectedDataFeatures);
-            });
+            //     // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
+            //     const selectedDataFeatures = earthquakeDataFeatures.filter(
+            //         (d) =>
+            //             d.properties[xaxis_label] == chosenEvent.srcElement.__data__.x_value &&
+            //             d.properties[yaxis_label] == chosenEvent.srcElement.__data__.y_value,
+            //     );
+            //     plots['date_selection'].update(plots, selectedDataFeatures);
+            //     plots['detailed_view'].update(plots, [selectedDataFeatures[0], tsunamiDataFeatures]);
+            // });
 
             // from https://observablehq.com/@d3/brushable-scatterplot
             // TODO only when ctrl is pressed
             // Brushing behavior
-            plotGroup.call(
-                d3.brush().on('start brush end', ({ selection }) => {
+            const brush = d3.brush()
+                .filter((event) => event.ctrlKey)
+                .on('start brush end', ({ selection }) => {
                     let value = [];
                     if (selection) {
                         const [[x0, y0], [x1, y1]] = selection;
@@ -137,8 +146,9 @@ export const scatter_plot = {
                     } else {
                         plotGroup.selectAll('circle').style('fill', 'black');
                     }
-                }),
-            );
+                })
+
+            plotGroup.call(brush);
 
             // Include zooming
             // const gx = svg.append("g");
@@ -159,7 +169,7 @@ export const scatter_plot = {
             // }
         }
         // If the action is highlight, keep the features that were alredy in the scatterplot and make the selected features green, the other features are black
-        else if (action == 'highlight') {
+        if (action == 'highlight') {
             const svg = d3.select('#scatterplot');
             const dot = svg.selectAll('circle');
 
