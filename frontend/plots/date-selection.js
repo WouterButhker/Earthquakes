@@ -60,8 +60,6 @@ export const date_selection = {
         console.log(yearMonthData);
 
         const all_years = yearMonthData.map(d => d.year);
-        // const minYear = d3.min(all_years);
-        // const maxYear = d3.max(all_years);
         
         let uniqueYears = new Set(all_years);
         let numUniqueYears = uniqueYears.size;
@@ -114,7 +112,7 @@ export const date_selection = {
         
         // Iterate over each year range and store results
         const count_data = yearRanges.map(range => ({
-            range: `${range.start}-${range.end}`,
+            range: range.start === range.end ? `${range.start}` : `${range.start}-${range.end}`,
             data: aggregateDataByYearRange(range.start, range.end)
         }));
         
@@ -192,13 +190,16 @@ export const date_selection = {
             .attr('text-anchor', 'middle')
             .text('Month');
 
+        // Check if all ranges are only one year
+        const allSingleYear = yearRanges.every(range => range.start === range.end);
+
         g.append('text')
             .attr('class', 'axis-label')
-            .attr('y', -40)
+            .attr('y', -45)
             .attr('x', -height / 2)
             .attr('transform', 'rotate(-90)')
             .attr('text-anchor', 'middle')
-            .text('Year Range');
+            .text(allSingleYear ? 'Year' : 'Year Ranges');
 
         // Optional: Add a legend for the color scale
         const legendWidth = 200,
