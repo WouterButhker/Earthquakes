@@ -8,7 +8,7 @@ import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import {Circle, Fill, Stroke, Style} from 'ol/style';
+import {Stroke, Style} from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
 import {platformModifierKeyOnly, click, pointerMove} from 'ol/events/condition';
@@ -132,13 +132,18 @@ const earthquakeStyle = function (feature) {
     return getStyle(feature, color, size);
 };
 
-// Dot style for selected earthquakes
+
 const selectedStyle = function (feature) {
+    // Dot style for selected earthquakes
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
-        style.getImage().getFill().setColor('blue');
+        style.getImage().getFill().setColor('#738cfd');
+        const stroke = new Stroke({ color: "#000000", width: 2 })
+        style.getImage().setStroke(stroke);
         return style;
     }
+
+    // style for selected lines
     return new Style({
         stroke: new Stroke({
             color: 'green',
