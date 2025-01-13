@@ -42,6 +42,8 @@
                 <label for="viewToggle"></label>
             </div>
             <button id="resetButton">Reset Plots</button>
+            <button id="pointOfInterest1">Many people missing</button>
+            <button id="pointOfInterest2">Many houses destroyed</button>
         </div>
     </div>
 
@@ -56,6 +58,8 @@
         <div id="scatterplotDiv" class="plot-container">
             <div class="plot-header">Click and drag to select earthquakes based on selected features.</div>
             <svg id="scatterplot"></svg>
+            <select id="selectButtonXaxis"></select>
+            <select id="selectButtonYaxis"></select>
         </div>
     </div>
 
@@ -64,11 +68,8 @@
         <div id="legend"></div> <!-- Dynamically built -->
         <div id="detailedViewDiv">
             <text><b>More information:</b></text>
-            <text id="text_magnitude">Magnitude: </text>
-            <text id="text_depth">Depth: </text>
-            <text id="text_country">Location name: </text>
-            <text id="text_date">Date: </text>
-            <text id="text_disasters">Connected disasters: </text>
+            <br>
+            <text id="detailed_text"></text>
         </div>
     </div>
 </div>

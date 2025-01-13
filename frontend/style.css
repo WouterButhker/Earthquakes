@@ -146,6 +146,19 @@ svg {
     height: 100%;
 }
 
+.ol-dragbox {
+    background-color: rgba(255,255,255,0.8);
+    border-color: rgba(0,0,0,0.5);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0;
+    cursor: default;
+}
+
+.ol-attribution {
+    visibility: hidden;
+}
+
 /* ================================== */
 /* Bottom section: legend and details */
 /* ================================== */

@@ -4,35 +4,38 @@ export const detailed_view = {
     render(plots, data) {
         let selectedDataPoint = data;
 
-        const text_magnitude = d3.select('#text_magnitude').append('text');
-        const text_depth = d3.select('#text_depth').append('text');
-        const text_country = d3.select('#text_country').append('text');
-        const text_date = d3.select('#text_date').append('text');
-        const text_disasters = d3.select('#text_disasters').append('text');
+        const detailed_text = d3.select('#detailed_text').append('text');
+        detailed_text.text('[no earthquake selected]');
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
-        const text_magnitude = d3.select('#text_magnitude').select('text');
-        const text_depth = d3.select('#text_depth').select('text');
-        const text_country = d3.select('#text_country').select('text');
-        const text_date = d3.select('#text_date').select('text');
-        const text_disasters = d3.select('#text_disasters').select('text');
-
         console.log(selectedDataPoint);
+
         if (selectedDataPoint === undefined) {
-            text_magnitude.text('Nothing selected');
-            text_depth.text('Nothing selected');
-            text_country.text('Nothing selected');
-            text_date.text('Nothing selected');
-            text_disasters.text('Nothing selected');
+            d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+        }
+
+        const detailed_text = d3.select('#detailed_text').select('text');
+
+        if (selectedDataPoint === undefined) {
+            console.log('selected datapoint undefined');
+            detailed_text.text('[no earthquake selected]');
         } else {
-            // TODO add handlers for when the data is not available
-            text_magnitude.text(selectedDataPoint.properties.Mag);
-            text_depth.text(selectedDataPoint.properties['Focal Depth (km)']);
-            text_country.text(selectedDataPoint.properties['Location Name']);
-            const datestring = getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year);
-            text_date.text(datestring);
-            text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
+            // Get a list of all the available properties of the selectedDataPoint
+            const listofProperties = Object.keys(selectedDataPoint.properties);
+
+            // TODO filter the list of properties to only show the relevant properties
+
+            var new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.properties[d]).join("<br>");
+
+            const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
+            // If there is a related tsunami, join the related tsunami to the detailed text
+            if (related_tsunami !== 'No related tsunamis') {
+                new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;
+            }
+
+            // set html text as the new detailed text
+            detailed_text.html(new_detailed_text);
         }
     },
 };
@@ -43,7 +46,7 @@ function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
         return 'No related tsunamis';
     } else {
         const selectedData = tsunamiDataFeatures.filter((d) => d.properties.Id == tsunamiID);
-        console.log(selectedData);
+        console.log("related tsunami data: ", selectedData);
         return selectedData[0].properties['Location Name'];
     }
 }
