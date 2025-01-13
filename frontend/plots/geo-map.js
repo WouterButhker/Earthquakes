@@ -8,12 +8,13 @@ import VectorLayer from 'ol/layer/Vector';
 import HeatmapLayer from 'ol/layer/Heatmap';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
-import { Fill, Stroke, Style } from 'ol/style';
-import CircleStyle from 'ol/style/Circle';
+import {Circle, Fill, Stroke, Style} from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
 import { platformModifierKeyOnly } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
+import * as d3 from "d3";
+import {getStyle, updateLegend} from "./geo-map-styling";
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
@@ -22,6 +23,22 @@ export let heatmapLayer = null;
 const openStreetMap = new TileLayer({
     source: new OSM(),
 });
+
+let color = d3.select("#color").property("value");
+let size = d3.select("#size").property("value");
+
+d3.select("#size").on("change", function () {
+    size = d3.select(this).property("value");
+    updateLegend(color, size);
+    earthquakesLayer.getSource().changed();
+});
+
+d3.select("#color").on("change", function () {
+    color = d3.select(this).property("value");
+    updateLegend(color, size);
+    earthquakesLayer.getSource().changed();
+});
+
 
 export const geo_map = {
     render(plots, data) {
@@ -100,6 +117,8 @@ export const geo_map = {
             }),
         });
 
+        updateLegend(color, size);
+
         // Add interactions
         const select = addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots);
         const dragBox = addDragBoxInteraction(map, select, earthquakeData, plots);
@@ -109,17 +128,8 @@ export const geo_map = {
     },
 };
 
-// Default dot style for earthquakes
 const earthquakeStyle = function (feature) {
-    let size = feature.get('Mag') ? feature.get('Mag') : 5;
-    return new Style({
-        image: new CircleStyle({
-            radius: size,
-            fill: new Fill({
-                color: 'red',
-            }),
-        }),
-    });
+    return getStyle(feature, color, size);
 };
 
 // Dot style for selected earthquakes
@@ -249,3 +259,4 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
         selectedFeatures.clear();
     });
 }
+
