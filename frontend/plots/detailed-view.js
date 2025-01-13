@@ -4,35 +4,25 @@ export const detailed_view = {
     render(plots, data) {
         let selectedDataPoint = data;
 
-        const text_magnitude = d3.select('#text_magnitude').append('text');
-        const text_depth = d3.select('#text_depth').append('text');
-        const text_country = d3.select('#text_country').append('text');
-        const text_date = d3.select('#text_date').append('text');
-        const text_disasters = d3.select('#text_disasters').append('text');
+        const detailed_text = d3.select('#detailed_text').append('text');
+        detailed_text.text('[no earthquake selected]');
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
-        const text_magnitude = d3.select('#text_magnitude').select('text');
-        const text_depth = d3.select('#text_depth').select('text');
-        const text_country = d3.select('#text_country').select('text');
-        const text_date = d3.select('#text_date').select('text');
-        const text_disasters = d3.select('#text_disasters').select('text');
+        const detailed_text = d3.select('#detailed_text').select('text');
 
-        console.log(selectedDataPoint);
         if (selectedDataPoint === undefined) {
-            text_magnitude.text('Nothing selected');
-            text_depth.text('Nothing selected');
-            text_country.text('Nothing selected');
-            text_date.text('Nothing selected');
-            text_disasters.text('Nothing selected');
+            console.log('selected datapoint undefined');
+            detailed_text.text('[no earthquake selected]');
         } else {
-            // TODO add handlers for when the data is not available
-            text_magnitude.text(selectedDataPoint.properties.Mag);
-            text_depth.text(selectedDataPoint.properties['Focal Depth (km)']);
-            text_country.text(selectedDataPoint.properties['Location Name']);
-            const datestring = getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year);
-            text_date.text(datestring);
-            text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
+            // Get a list of all the available properties of the selectedDataPoint
+            const listofProperties = Object.keys(selectedDataPoint.getProperties());
+            // TODO set each property to a new line
+            const new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.getProperties()[d]).join("<br>");
+            // set html text as the new detailed text
+            detailed_text.html(new_detailed_text);
+            // text_date.text(getDateString(selectedDataPoint.properties.Mo, selectedDataPoint.properties.Year));
+            // text_disasters.text(getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures));
         }
     },
 };

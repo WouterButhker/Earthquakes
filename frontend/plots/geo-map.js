@@ -121,7 +121,7 @@ export const geo_map = {
 
         // Add interactions
         const select = addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots);
-        const dragBox = addDragBoxInteraction(map, select, earthquakeData, plots);
+        const dragBox = addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots);
     },
     update(plots, data) {
         this.render(plots, data);
@@ -150,10 +150,15 @@ const selectedStyle = function (feature) {
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
     const select = new Select({ style: selectedStyle });
     map.addInteraction(select);
-
+    // When a datapoint is clicked, update the detailed view with the selected datapoint
+    // And update the dateselection and scatterplot with the full data filtered by the selected datapoint    
     map.on('click', function () {
-        // TODO check whether a feature was actually clicked (and not the map)
-        // Filter the earthquake data to only include earthquakes with the same magnitude and depth as the selected point
+        const selectedFeatures = select.getFeatures();
+        if (selectedFeatures.getArray().length !== 0) {
+            // print all properties and values of the selected datapoint
+            const selectedDataPoint = selectedFeatures.getArray()[0];
+            plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+        }
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
@@ -165,16 +170,14 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                     .map((f) => f.get('Focal Depth (km)'))
                     .includes(d.properties['Focal Depth (km)']),
         );
-
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
-        plots['scatter_plot'].update(plots, selectedData);
-        plots['detailed_view'].update(plots, [selectedData[0], tsunamiDataFeatures]);
     });
 
     return select;
 }
 
-function addDragBoxInteraction(map, select, earthquakeData, plots) {
+function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots) {
     const dragBox = new DragBox({
         condition: platformModifierKeyOnly,
     });
@@ -237,6 +240,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                 selectedFeatures.extend(boxFeatures);
             }
         }
+        // TODO filter this based on what has been selected as axes in the scatterplot
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
         const selectedData = earthquakeData.features.filter(
             (d) =>
@@ -250,7 +254,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                     .includes(d.properties['Focal Depth (km)']),
         );
 
-        plots['scatter_plot'].update(plots, selectedData);
+        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
     });
 
