@@ -2,29 +2,25 @@ import * as d3 from 'd3';
 
 export const scatter_plot = {
     render(plots, data) {
-        // TODO add highlight or filter boolean
-        // TODO add function that only highlights the selected features
-
-        // TODO add check if there are any values left, otherwise display a message
         let [earthquakeDataFeatures, action, xaxis_label, yaxis_label] = data;
 
-        // TODO remove the undefined features that are undefined for the chosen features
+        // Remove the undefined features that are undefined for the chosen features
         earthquakeDataFeatures = earthquakeDataFeatures.filter(
             (d) => d.properties[xaxis_label] !== undefined && d.properties[yaxis_label] !== undefined,
         );
 
         // The scatterplot needs to be created from scratch, because the axis could change based on the selection
         if (action == 'filter') {
-            // TODO let the user choose the x and y axis
             // Extract data: create an array of objects { x_value: ..., y_value: ... }
             const points = earthquakeDataFeatures.map((d) => {
                 const x_value = d.properties[xaxis_label];
                 const y_value = d.properties[yaxis_label];
                 return { x_value, y_value };
             });
+            // If there are no points left, display a message instead of the scatterplot
             if (points.length == 0) {
-                d3.select('#scatterplot').text('No data available');
-                console.log('No data available');
+                d3.select('#scatterplot').selectAll('*').remove();
+                d3.select('#scatterplot').append('text').text('No data available').attr('x', 300).attr('y', 200);
                 return;
             }
             const margin = { top: 40, right: 30, bottom: 50, left: 80 },
@@ -64,7 +60,6 @@ export const scatter_plot = {
                 .call(yAxis);
 
             // Add axis labels
-            // TODO add a dropdown for the x axis
             plotGroup.append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', `translate(${width / 2}, ${height + 40})`)
@@ -73,7 +68,6 @@ export const scatter_plot = {
                 .style('fill', 'black')
                 .text(xaxis_label);
 
-            // TODO add a dropdown for the y axis
             plotGroup.append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', 'rotate(-90)')

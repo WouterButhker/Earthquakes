@@ -13,7 +13,6 @@ export const date_selection = {
         // clear the axis
         svg.selectAll('*').remove();
 
-        // TODO maybe keep the axis and only update the data
         svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
 
         const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);

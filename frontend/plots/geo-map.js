@@ -226,6 +226,7 @@ function addDragBoxInteraction(map, select, earthquakeData, plots) {
                 selectedFeatures.extend(boxFeatures);
             }
         }
+        // TODO filter this based on what has been selected as axes in the scatterplot
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
         const selectedData = earthquakeData.features.filter(
             (d) =>

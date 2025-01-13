@@ -25,7 +25,10 @@ plots['detailed_view'].render(plots, undefined);
 
 // Interactive buttons
 d3.select('#resetButton').on('click', function () {
-    plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Focal Depth (km)', 'Mag']);
+    plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', 'Mag', 'Focal Depth (km)']);
+    // set the value of the selectButtonXaxis and selectButtonYaxis to the default values
+    d3.select("#selectButtonXaxis").property("value", "Mag");
+    d3.select("#selectButtonYaxis").property("value", "Focal Depth (km)");
     plots['date_selection'].update(plots, earthquakeData.features);
 });
 
