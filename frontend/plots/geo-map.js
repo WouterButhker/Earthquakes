@@ -11,7 +11,7 @@ import Point from 'ol/geom/Point';
 import {Circle, Fill, Stroke, Style} from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly } from 'ol/events/condition';
+import {platformModifierKeyOnly, click, pointerMove} from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from "d3";
 import {getStyle, updateLegend} from "./geo-map-styling";
@@ -136,7 +136,7 @@ const earthquakeStyle = function (feature) {
 const selectedStyle = function (feature) {
     if (feature.get('geometry').getType() === 'Point') {
         const style = earthquakeStyle(feature);
-        style.getImage().getFill().setColor('green');
+        style.getImage().getFill().setColor('blue');
         return style;
     }
     return new Style({
@@ -148,11 +148,13 @@ const selectedStyle = function (feature) {
 };
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
-    const select = new Select({ style: selectedStyle });
+    const select = new Select({
+        style: selectedStyle,
+        condition: click
+    });
     map.addInteraction(select);
-    // When a datapoint is clicked, update the detailed view with the selected datapoint
-    // And update the dateselection and scatterplot with the full data filtered by the selected datapoint    
-    map.on('click', function () {
+
+    select.on('select', function () {
         const selectedFeatures = select.getFeatures();
         if (selectedFeatures.getArray().length !== 0) {
             // print all properties and values of the selected datapoint
