@@ -29,8 +29,20 @@ d3.select('#resetButton').on('click', function () {
     plots['date_selection'].update(plots, earthquakeData.features);
 });
 
-d3.select('#toggleView').on('click', function () {
+d3.select('#viewToggle').on('click', function () {
     const heatmapVisible = heatmapLayer.getVisible();
     heatmapLayer.setVisible(!heatmapVisible);
     earthquakesLayer.setVisible(heatmapVisible);
+});
+
+const viewToggle = document.getElementById('viewToggle');
+const viewToggleText = document.getElementById('viewToggleText');
+const sizeDropdown = document.getElementById('size');
+const colorDropdown = document.getElementById('color');
+
+viewToggle.addEventListener('change', () => {
+    const isHeatmapMode = viewToggle.checked;
+    sizeDropdown.disabled = isHeatmapMode;
+    colorDropdown.disabled = isHeatmapMode;
+    viewToggleText.innerHTML = viewToggle.checked ? 'Heatmap' : '&nbsp;&nbsp;Dotted&nbsp;&nbsp;';
 });
