@@ -64,12 +64,10 @@ d3.select("#selectButtonXaxis").on("change", function(d) {
     // recover the option that has been chosen
     var newX_label = d3.select(this).property("value");
     var newY_label = d3.select("#selectButtonYaxis").property("value");
-    console.log("x axis: ", newX_label, "\ny axis: ", newY_label);
     plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
 });
 d3.select("#selectButtonYaxis").on("change", function(d) {
     var newX_label = d3.select("#selectButtonXaxis").property("value");
     var newY_label = d3.select(this).property("value");
-    console.log("x axis: ", newX_label, "\ny axis: ", newY_label);
     plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
 });
