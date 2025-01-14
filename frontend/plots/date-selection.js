@@ -21,8 +21,9 @@ export const date_selection = {
             height = document.getElementById('dateSelection').clientHeight - margin.top - margin.bottom;
         }
 
-        // Clear the axis
+        // Clear the SVG
         svg.selectAll('*').remove();
+        svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
 
         const g = svg.append('g').attr('transform', `translate(${margin.left + yearLabelOffset},${margin.top})`);
 

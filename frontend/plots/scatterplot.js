@@ -1,8 +1,20 @@
 import * as d3 from 'd3';
 
+const svg = d3.select('#scatterplot');
+// Margins for svg element
+const margin = { top: 40, right: 30, bottom: 50, left: 80 };
+// Width/height of svg element - initially uninitialized
+let width, height;
+
 export const scatter_plot = {
     render(plots, data) {
         let [earthquakeDataFeatures, action, xaxis_label, yaxis_label] = data;
+
+        // If width is not set, use the first client params for all next renders
+        if (!width) {
+            width = document.getElementById('scatterplot').clientWidth - margin.left - margin.right;
+            height = document.getElementById('scatterplot').clientHeight - margin.top - margin.bottom;
+        }
 
         // Remove the undefined features that are undefined for the chosen features
         earthquakeDataFeatures = earthquakeDataFeatures.filter(
@@ -19,19 +31,13 @@ export const scatter_plot = {
             });
             // If there are no points left, display a message instead of the scatterplot
             if (points.length == 0) {
-                d3.select('#scatterplot').selectAll('*').remove();
-                d3.select('#scatterplot').append('text').text('No data available').attr('x', 300).attr('y', 200);
+                svg.selectAll('*').remove();
+                svg.append('text').text('No data available').attr('x', 300).attr('y', 200);
                 return;
             }
-            const margin = { top: 40, right: 30, bottom: 50, left: 80 },
-                width = 600 - margin.left - margin.right,
-                height = 400 - margin.top - margin.bottom;
-
-            const svg = d3.select('#scatterplot');
 
             // Clear the SVG
             svg.selectAll('*').remove();
-
             svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
 
             // Create a group for the plot
@@ -185,7 +191,6 @@ export const scatter_plot = {
         }
         // If the action is highlight, keep the features that were alredy in the scatterplot and make the selected features green, the other features are black
         if (action == 'highlight') {
-            const svg = d3.select('#scatterplot');
             const dot = svg.selectAll('circle');
 
             const selectedData = earthquakeDataFeatures;
