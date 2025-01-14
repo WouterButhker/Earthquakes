@@ -41,9 +41,33 @@ body {
     font-size: 0.9em;
 }
 
-/* ============= */
+/* Map view container */
+
+#mapControlsContainer {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    gap: 5px;
+}
+
+.map-controls-header {
+    font-size: 1em;
+    font-weight: bold;
+    text-align: center;
+    color: #555;
+}
+
+.map-controls-content {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 /* Toggle switch */
-/* ============= */
 
 .toggle-switch {
     display: flex;
@@ -87,11 +111,11 @@ body {
     transition: transform 0.3s;
 }
 
-.toggle-switch input:checked + label:before {
+.toggle-switch input:checked+label:before {
     background-color: #4caf50;
 }
 
-.toggle-switch input:checked + label:after {
+.toggle-switch input:checked+label:after {
     transform: translateX(20px);
 }
 
@@ -102,13 +126,9 @@ select:disabled {
 
 #viewToggleText {
     font-size: 0.9em;
-    /* Adjust font size */
     color: #333;
-    /* Set text color */
     text-align: center;
-    /* Center-align the text */
     margin-bottom: 4px;
-    /* Space below the text */
 }
 
 /* ===================== */
@@ -157,6 +177,18 @@ svg {
 
 .ol-attribution {
     visibility: hidden;
+}
+
+/* Scatterplot dropdowns */
+.scatter-controls {
+    display: flex;
+    justify-content: space-evenly;
+    margin-bottom: 10px;
+}
+
+.scatter-controls div {
+    display: flex;
+    flex-direction: column;
 }
 
 /* ================================== */
