@@ -199,7 +199,6 @@ export const scatter_plot = {
             const yExtent = d3.extent(points, (d) => d.y_value);
 
             const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, 600]);
-
             const yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([400, 0]);
 
             // The highlighted points are yellow and the other points are black
@@ -216,3 +215,61 @@ export const scatter_plot = {
         this.render(plots, data);
     },
 };
+
+// Options for both the dropdowns of the axis in the scatterplot
+// prettier-ignore
+const scatterplot_xaxis_options = [
+    'Mag', 'Focal Depth (km)', 'MMI Int', 'Total Deaths', 'Total Missing', 'Total Injuries',
+    'Total Damage ($Mil)', 'Total Houses Destroyed', 'Total Houses Damaged',
+];
+// prettier-ignore
+const scatterplot_yaxis_options = [
+    'Focal Depth (km)', 'Mag', 'MMI Int', 'Total Deaths', 'Total Missing', 'Total Injuries',
+    'Total Damage ($Mil)', 'Total Houses Destroyed', 'Total Houses Damaged',
+];
+// prettier-ignore
+const scatterplot_categorical_options = [
+    'Country', 'MMI Int', 'Total Death Description', 'Total Missing Description', 'Total Injuries Description',
+    'Total Damage Description', 'Total Houses Destroyed Description', 'Total Houses Damaged Description',
+];
+
+export function addScatterplotAxisInteractions(plots, earthquakeData) {
+    // Add the options to the dropdowns of the axis in the scatterplot
+    d3.select('#selectButtonXaxis')
+        .selectAll('myOptions')
+        .data(scatterplot_xaxis_options)
+        .enter()
+        .append('option')
+        .text(function (d) {
+            return d;
+        })
+        .attr('value', function (d) {
+            return d;
+        });
+
+    d3.select('#selectButtonYaxis')
+        .selectAll('myOptions')
+        .data(scatterplot_yaxis_options)
+        .enter()
+        .append('option')
+        .text(function (d) {
+            return d;
+        })
+        .attr('value', function (d) {
+            return d;
+        });
+
+    // Event listeners for the dropdowns of the axis in the scatterplot
+    d3.select('#selectButtonXaxis').on('change', function (d) {
+        // recover the option that has been chosen
+        var newX_label = d3.select(this).property('value');
+        var newY_label = d3.select('#selectButtonYaxis').property('value');
+        plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
+    });
+
+    d3.select('#selectButtonYaxis').on('change', function (d) {
+        var newX_label = d3.select('#selectButtonXaxis').property('value');
+        var newY_label = d3.select(this).property('value');
+        plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
+    });
+}
