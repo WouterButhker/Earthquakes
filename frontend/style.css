@@ -174,7 +174,8 @@ svg {
 }
 
 #legend,
-#detailedViewDiv {
+#detailedViewDiv,
+#pointsOfInterestContainer {
     flex: 1;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -234,4 +235,21 @@ svg {
     border: 1px solid #333;
     border-radius: 50%;
     vertical-align: middle;
+}
+
+.details-header {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.details-content {
+    font-size: 0.9em;
+    line-height: 1.5em;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    background-color: #f7f7f7;
 }
