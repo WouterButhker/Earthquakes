@@ -1,21 +1,30 @@
 import * as d3 from 'd3';
 
+const svg = d3.select('#dateSelection');
+// Margins for svg element
+const margin = { top: 50, right: 30, bottom: 50, left: 60 };
+// Width/height of svg element - initially uninitialized
+let width, height;
+/// Width/height of the legend
+const legendWidth = 200,
+    legendHeight = 20;
+// Offset for year label from the y-axis (avoid overlap with years)
+const yearLabelOffset = 25;
+
 export const date_selection = {
     render(plots, data) {
         let earthquakeDataFeatures = data;
 
-        const margin = { top: 50, right: 30, bottom: 50, left: 60 },
-            width = 450 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+        // If width is not set, use the first client params for all next renders
+        if (!width) {
+            width = document.getElementById('dateSelection').clientWidth - margin.left - margin.right;
+            height = document.getElementById('dateSelection').clientHeight - margin.top - margin.bottom;
+        }
 
-        const svg = d3.select('#dateSelection');
-
-        // clear the axis
+        // Clear the axis
         svg.selectAll('*').remove();
 
-        svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
-
-        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+        const g = svg.append('g').attr('transform', `translate(${margin.left + yearLabelOffset},${margin.top})`);
 
         const counts = d3.rollup(
             earthquakeDataFeatures,
@@ -81,46 +90,15 @@ export const date_selection = {
 
         console.log(`Range size: ${rangeSize}`);
 
-        let yearRanges = [];
-
-        function createYearRanges(minYear, maxYear, rangeSize) {
-            for (let start = minYear; start <= maxYear; start += rangeSize) {
-                yearRanges.push({
-                    start: start,
-                    end: Math.min(start + rangeSize - 1, maxYear),
-                });
-            }
-            return yearRanges;
-        }
-
-        yearRanges = createYearRanges(minYear, maxYear, rangeSize);
-
-        function aggregateDataByYearRange(startYear, endYear) {
-            const filteredData = yearMonthData.filter((d) => d.year >= startYear && d.year <= endYear);
-            return d3
-                .rollups(
-                    filteredData,
-                    (v) => d3.sum(v, (leaf) => leaf.count), // Summing function
-                    (d) => d.month, // Grouping function
-                )
-                .map(([month, count]) => ({ month, count }));
-        }
+        let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
         // Iterate over each year range and store results
         const count_data = yearRanges.map((range) => ({
             range: range.start === range.end ? `${range.start}` : `${range.start}-${range.end}`,
-            data: aggregateDataByYearRange(range.start, range.end),
+            data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
 
         console.log(count_data);
-
-        function selectData(startYear, endYear) {
-            const selectedData = earthquakeDataFeatures.filter((feature) => {
-                const year = parseInt(feature.properties.Year);
-                return year >= startYear && year <= endYear;
-            });
-            return selectedData;
-        }
 
         // Create scales
         const xScale = d3
@@ -159,17 +137,16 @@ export const date_selection = {
             .attr('height', yScale.bandwidth())
             .style('fill', (d) => colorScale(d.count));
 
-        // Create axes
+        // Add x-axis
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
             // Format month numbers to names
             const formatMonth = d3.timeFormat('%b');
             return formatMonth(new Date(2020, d, 1));
         });
-
-        const yAxis = d3.axisLeft(yScale).tickFormat((d) => d);
-
         g.append('g').attr('transform', `translate(0,${height})`).call(xAxis);
 
+        // Add y-axis
+        const yAxis = d3.axisLeft(yScale).tickFormat((d) => d);
         g.append('g')
             .call(yAxis)
             .selectAll('.tick') // Selecting all the y-axis ticks which are bound to your year range data
@@ -178,12 +155,12 @@ export const date_selection = {
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
                 console.log(startYear, endYear);
-                let selectedData = selectData(startYear, endYear);
+                let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
 
                 plots['date_selection'].update(plots, selectedData);
             });
 
-        // Axis labels
+        // Add month label
         g.append('text')
             .attr('class', 'axis-label')
             .attr('x', width / 2)
@@ -191,69 +168,98 @@ export const date_selection = {
             .attr('text-anchor', 'middle')
             .text('Month');
 
-        // Check if all ranges are only one year
+        // Add year label
         const allSingleYear = yearRanges.every((range) => range.start === range.end);
-
         g.append('text')
             .attr('class', 'axis-label')
             .attr('y', -45)
             .attr('x', -height / 2)
             .attr('transform', 'rotate(-90)')
             .attr('text-anchor', 'middle')
-            .text(allSingleYear ? 'Year' : 'Year Ranges');
+            .text(allSingleYear ? 'Year' : 'Year Ranges')
+            .attr('dy', -yearLabelOffset);
 
-        // Optional: Add a legend for the color scale
-        const legendWidth = 200,
-            legendHeight = 20;
-
-        const legendGroup = svg.append('g').attr('transform', `translate(${margin.left},${margin.top - 30})`);
-
-        const legendScale = d3.scaleLinear().domain([0, countExtent[1]]).range([0, legendWidth]);
-
-        const legendAxis = d3.axisBottom(legendScale).ticks(5).tickSize(-legendHeight);
-
-        // Add a gradient for the legend
-        const defs = svg.append('defs');
-        const gradient = defs
-            .append('linearGradient')
-            .attr('id', 'legend-gradient')
-            .attr('x1', '0%')
-            .attr('y1', '0%')
-            .attr('x2', '100%')
-            .attr('y2', '0%');
-
-        const legendInterpolator = d3.interpolateBlues;
-        const numStops = 10;
-        d3.range(numStops).forEach((i) => {
-            gradient
-                .append('stop')
-                .attr('offset', (i / (numStops - 1)) * 100 + '%')
-                .attr('stop-color', legendInterpolator(i / (numStops - 1)));
-        });
-
-        legendGroup
-            .append('rect')
-            .attr('width', legendWidth)
-            .attr('height', legendHeight)
-            .style('fill', 'url(#legend-gradient)');
-
-        legendGroup
-            .append('g')
-            .attr('class', 'legend')
-            .attr('transform', `translate(0,${legendHeight})`)
-            .call(legendAxis)
-            .select('.domain')
-            .remove();
-
-        legendGroup
-            .append('text')
-            .attr('class', 'legend')
-            .attr('y', -5)
-            .attr('x', legendWidth / 2)
-            .attr('text-anchor', 'middle')
-            .text('Count');
+        generateLegend(margin.left + (width - legendWidth) / 2, countExtent);
     },
     update(plots, data) {
         this.render(plots, data);
     },
 };
+
+function aggregateDataByYearRange(yearMonthData, startYear, endYear) {
+    const filteredData = yearMonthData.filter((d) => d.year >= startYear && d.year <= endYear);
+    return d3
+        .rollups(
+            filteredData,
+            (v) => d3.sum(v, (leaf) => leaf.count), // Summing function
+            (d) => d.month, // Grouping function
+        )
+        .map(([month, count]) => ({ month, count }));
+}
+
+function createYearRanges(minYear, maxYear, rangeSize) {
+    let yearRanges = [];
+    for (let start = minYear; start <= maxYear; start += rangeSize) {
+        yearRanges.push({
+            start: start,
+            end: Math.min(start + rangeSize - 1, maxYear),
+        });
+    }
+    return yearRanges;
+}
+
+function selectData(earthquakeDataFeatures, startYear, endYear) {
+    const selectedData = earthquakeDataFeatures.filter((feature) => {
+        const year = parseInt(feature.properties.Year);
+        return year >= startYear && year <= endYear;
+    });
+    return selectedData;
+}
+
+function generateLegend(leftOffset, countExtent) {
+    const legendGroup = svg.append('g').attr('transform', `translate(${leftOffset},${margin.top - 30})`);
+    const legendScale = d3.scaleLinear().domain([0, countExtent[1]]).range([0, legendWidth]);
+    const legendAxis = d3.axisBottom(legendScale).ticks(5).tickSize(-legendHeight);
+
+    // Add a gradient for the legend
+    const defs = svg.append('defs');
+    const gradient = defs
+        .append('linearGradient')
+        .attr('id', 'legend-gradient')
+        .attr('x1', '0%')
+        .attr('y1', '0%')
+        .attr('x2', '100%')
+        .attr('y2', '0%');
+
+    const legendInterpolator = d3.interpolateBlues;
+    const numStops = 10;
+    d3.range(numStops).forEach((i) => {
+        gradient
+            .append('stop')
+            .attr('offset', (i / (numStops - 1)) * 100 + '%')
+            .attr('stop-color', legendInterpolator(i / (numStops - 1)));
+    });
+    legendGroup
+        .append('rect')
+        .attr('width', legendWidth)
+        .attr('height', legendHeight)
+        .style('fill', 'url(#legend-gradient)');
+
+    // Add legend axis
+    legendGroup
+        .append('g')
+        .attr('class', 'legend')
+        .attr('transform', `translate(0,${legendHeight})`)
+        .call(legendAxis)
+        .select('.domain')
+        .remove();
+
+    // Add legend title
+    legendGroup
+        .append('text')
+        .attr('class', 'legend')
+        .attr('y', -5)
+        .attr('x', legendWidth / 2)
+        .attr('text-anchor', 'middle')
+        .text('Count');
+}
