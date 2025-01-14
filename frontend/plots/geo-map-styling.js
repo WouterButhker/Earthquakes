@@ -117,7 +117,7 @@ const colorMapping = {
     ],
     'Total Damage Description': [
         { label: 'None', color: '#88cc88' },
-        { label: 'Limited (roughly corresponding to less than $1 million)', color: '#ffcc00' },
+        { label: 'Limited (<$1 million)', color: '#ffcc00' },
         { label: 'Moderate (~$1 to $5 million)', color: '#ff9933' },
         { label: 'Severe (~$5 to $25 million)', color: '#ff6666' },
         { label: 'Extreme (~$25 million or more)', color: '#cc0000' },

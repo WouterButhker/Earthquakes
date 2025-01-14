@@ -218,7 +218,7 @@ function selectData(earthquakeDataFeatures, startYear, endYear) {
 }
 
 function generateLegend(leftOffset, countExtent) {
-    const legendGroup = svg.append('g').attr('transform', `translate(${leftOffset},${margin.top - 30})`);
+    const legendGroup = svg.append('g').attr('transform', `translate(${leftOffset},${margin.top - 40})`);
     const legendScale = d3.scaleLinear().domain([0, countExtent[1]]).range([0, legendWidth]);
     const legendAxis = d3.axisBottom(legendScale).ticks(5).tickSize(-legendHeight);
 
@@ -259,8 +259,8 @@ function generateLegend(leftOffset, countExtent) {
     legendGroup
         .append('text')
         .attr('class', 'legend')
-        .attr('y', -5)
-        .attr('x', legendWidth / 2)
-        .attr('text-anchor', 'middle')
-        .text('Count');
+        .attr('x', legendWidth + 10)
+        .attr('y', 15)
+        .attr('text-anchor', 'start')
+        .text('Counts');
 }

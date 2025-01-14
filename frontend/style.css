@@ -20,7 +20,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 10px;
     background-color: #f8f9fa;
     border: 1px solid #ddd;
@@ -39,6 +38,13 @@ body {
 #controls button {
     padding: 5px;
     font-size: 0.9em;
+}
+
+#resetButton {
+    font-size: 0.9em;
+    padding: 5px 10px;
+    height: auto;
+    align-self: center;
 }
 
 /* Map view container */
@@ -111,11 +117,11 @@ body {
     transition: transform 0.3s;
 }
 
-.toggle-switch input:checked+label:before {
+.toggle-switch input:checked + label:before {
     background-color: #4caf50;
 }
 
-.toggle-switch input:checked+label:after {
+.toggle-switch input:checked + label:after {
     transform: translateX(20px);
 }
 
@@ -152,6 +158,11 @@ select:disabled {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 55vh;
+}
+
+#map.plot-container {
+    height: 100%;
 }
 
 .plot-header {
@@ -179,16 +190,9 @@ svg {
     visibility: hidden;
 }
 
-/* Scatterplot dropdowns */
 .scatter-controls {
     display: flex;
     justify-content: space-evenly;
-    margin-bottom: 10px;
-}
-
-.scatter-controls div {
-    display: flex;
-    flex-direction: column;
 }
 
 /* ================================== */
@@ -197,7 +201,6 @@ svg {
 
 #bottomSection {
     display: flex;
-    justify-content: space-between;
     padding: 10px;
     background-color: #f8f9fa;
     border: 1px solid #ddd;
@@ -217,13 +220,12 @@ svg {
     font-size: 0.85em;
 }
 
-#legend h3 {
-    margin-top: 0;
-}
+/* Legend */
 
-#detailedViewDiv text {
-    display: block;
-    margin-bottom: 5px;
+#legend {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 10px;
 }
 
 #legend h3 {
@@ -267,6 +269,13 @@ svg {
     border: 1px solid #333;
     border-radius: 50%;
     vertical-align: middle;
+}
+
+/* Details view */
+
+#detailedViewDiv text {
+    display: block;
+    margin-bottom: 5px;
 }
 
 .details-header {
