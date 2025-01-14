@@ -1,8 +1,20 @@
 import * as d3 from 'd3';
 
+const svg = d3.select('#scatterplot');
+// Margins for svg element
+const margin = { top: 40, right: 30, bottom: 50, left: 80 };
+// Width/height of svg element - initially uninitialized
+let width, height;
+
 export const scatter_plot = {
     render(plots, data) {
         let [earthquakeDataFeatures, action, xaxis_label, yaxis_label] = data;
+
+        // If width is not set, use the first client params for all next renders
+        if (!width) {
+            width = document.getElementById('scatterplot').clientWidth - margin.left - margin.right;
+            height = document.getElementById('scatterplot').clientHeight - margin.top - margin.bottom;
+        }
 
         // Remove the undefined features that are undefined for the chosen features
         earthquakeDataFeatures = earthquakeDataFeatures.filter(
@@ -19,25 +31,17 @@ export const scatter_plot = {
             });
             // If there are no points left, display a message instead of the scatterplot
             if (points.length == 0) {
-                d3.select('#scatterplot').selectAll('*').remove();
-                d3.select('#scatterplot').append('text').text('No data available').attr('x', 300).attr('y', 200);
+                svg.selectAll('*').remove();
+                svg.append('text').text('No data available').attr('x', 300).attr('y', 200);
                 return;
             }
-            const margin = { top: 40, right: 30, bottom: 50, left: 80 },
-                width = 600 - margin.left - margin.right,
-                height = 400 - margin.top - margin.bottom;
-
-            const svg = d3.select('#scatterplot');
 
             // Clear the SVG
             svg.selectAll('*').remove();
-
-            svg.attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom);
+            svg.attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom);
 
             // Create a group for the plot
-            const plotGroup = svg.append('g')
-                .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            const plotGroup = svg.append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
 
             // Define scales
             const xExtent = d3.extent(points, (d) => d.x_value);
@@ -45,12 +49,22 @@ export const scatter_plot = {
             // TODO if the maximum value is above 1.000, make the scale logarithmic
             var xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
             if (xExtent[1] > 1000) {
-                xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);   
+                xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
             }
 
-            var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            var yScale = d3
+                .scaleLinear()
+                .domain([0, yExtent[1]])
+                .nice()
+                .range([height, 0])
+                .unknown(height - margin.bottom);
             if (yExtent[1] > 1000) {
-                yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+                yScale = d3
+                    .scaleSymlog()
+                    .domain([0.1, yExtent[1]])
+                    .nice()
+                    .range([height, 0])
+                    .unknown(height - margin.bottom);
             }
 
             // Add axes
@@ -58,15 +72,13 @@ export const scatter_plot = {
             const yAxis = d3.axisLeft(yScale);
 
             // Append axes to the plot group
-            plotGroup.append('g')
-                .attr('transform', `translate(0, ${height})`)
-                .call(xAxis);
+            plotGroup.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
 
-            plotGroup.append('g')
-                .call(yAxis);
+            plotGroup.append('g').call(yAxis);
 
             // Add axis labels
-            plotGroup.append('text')
+            plotGroup
+                .append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', `translate(${width / 2}, ${height + 40})`)
                 .style('text-anchor', 'middle')
@@ -74,7 +86,8 @@ export const scatter_plot = {
                 .style('fill', 'black')
                 .text(xaxis_label);
 
-            plotGroup.append('text')
+            plotGroup
+                .append('text')
                 .attr('class', 'axis-label')
                 .attr('transform', 'rotate(-90)')
                 .attr('y', -margin.left + 15)
@@ -83,11 +96,12 @@ export const scatter_plot = {
                 .style('font-size', '12px')
                 .style('fill', 'black')
                 .text(yaxis_label);
-            
+
             // TODO rotate the labels if a log scale is used
 
             // Plot the points as circles
-            plotGroup.selectAll('circle')
+            plotGroup
+                .selectAll('circle')
                 .data(points)
                 .join('circle')
                 .attr('cx', (d) => xScale(d.x_value))
@@ -99,7 +113,10 @@ export const scatter_plot = {
 
             // Undefined dots are displayed in red
             // TODO remove this because the data is already filtered before plotting
-            plotGroup.selectAll('circle').filter((d) => d.x_value === undefined || d.y_value === undefined).attr('fill', 'red');
+            plotGroup
+                .selectAll('circle')
+                .filter((d) => d.x_value === undefined || d.y_value === undefined)
+                .attr('fill', 'red');
 
             // Click behaviour
             // TODO this does not work but it has to be fixed
@@ -121,18 +138,22 @@ export const scatter_plot = {
             // from https://observablehq.com/@d3/brushable-scatterplot
             // TODO only when ctrl is pressed
             // Brushing behavior
-            const brush = d3.brush()
+            const brush = d3
+                .brush()
                 .filter((event) => event.ctrlKey)
                 .on('start brush end', ({ selection }) => {
                     let value = [];
                     if (selection) {
                         const [[x0, y0], [x1, y1]] = selection;
-                        value = plotGroup.selectAll('circle')
+                        value = plotGroup
+                            .selectAll('circle')
                             .style('fill', 'black')
                             .filter(
                                 (d) =>
-                                    x0 <= xScale(d.x_value) && xScale(d.x_value) < x1 &&
-                                    y0 <= yScale(d.y_value) && yScale(d.y_value) < y1,
+                                    x0 <= xScale(d.x_value) &&
+                                    xScale(d.x_value) < x1 &&
+                                    y0 <= yScale(d.y_value) &&
+                                    yScale(d.y_value) < y1,
                             )
                             .style('fill', 'green')
                             .data();
@@ -146,7 +167,7 @@ export const scatter_plot = {
                     } else {
                         plotGroup.selectAll('circle').style('fill', 'black');
                     }
-                })
+                });
 
             plotGroup.call(brush);
 
@@ -157,7 +178,7 @@ export const scatter_plot = {
             // const zoom = d3.zoom()
             // .scaleExtent([0.5, 32])
             // .on("zoom", zoomed);
-            
+
             // svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
 
             // function zoomed({transform}) {
@@ -170,7 +191,6 @@ export const scatter_plot = {
         }
         // If the action is highlight, keep the features that were alredy in the scatterplot and make the selected features green, the other features are black
         if (action == 'highlight') {
-            const svg = d3.select('#scatterplot');
             const dot = svg.selectAll('circle');
 
             const selectedData = earthquakeDataFeatures;
@@ -184,7 +204,6 @@ export const scatter_plot = {
             const yExtent = d3.extent(points, (d) => d.y_value);
 
             const xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, 600]);
-
             const yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([400, 0]);
 
             // The highlighted points are yellow and the other points are black
@@ -201,3 +220,61 @@ export const scatter_plot = {
         this.render(plots, data);
     },
 };
+
+// Options for both the dropdowns of the axis in the scatterplot
+// prettier-ignore
+const scatterplot_xaxis_options = [
+    'Mag', 'Focal Depth (km)', 'MMI Int', 'Total Deaths', 'Total Missing', 'Total Injuries',
+    'Total Damage ($Mil)', 'Total Houses Destroyed', 'Total Houses Damaged',
+];
+// prettier-ignore
+const scatterplot_yaxis_options = [
+    'Focal Depth (km)', 'Mag', 'MMI Int', 'Total Deaths', 'Total Missing', 'Total Injuries',
+    'Total Damage ($Mil)', 'Total Houses Destroyed', 'Total Houses Damaged',
+];
+// prettier-ignore
+const scatterplot_categorical_options = [
+    'Country', 'MMI Int', 'Total Death Description', 'Total Missing Description', 'Total Injuries Description',
+    'Total Damage Description', 'Total Houses Destroyed Description', 'Total Houses Damaged Description',
+];
+
+export function addScatterplotAxisInteractions(plots, earthquakeData) {
+    // Add the options to the dropdowns of the axis in the scatterplot
+    d3.select('#selectButtonXaxis')
+        .selectAll('myOptions')
+        .data(scatterplot_xaxis_options)
+        .enter()
+        .append('option')
+        .text(function (d) {
+            return d;
+        })
+        .attr('value', function (d) {
+            return d;
+        });
+
+    d3.select('#selectButtonYaxis')
+        .selectAll('myOptions')
+        .data(scatterplot_yaxis_options)
+        .enter()
+        .append('option')
+        .text(function (d) {
+            return d;
+        })
+        .attr('value', function (d) {
+            return d;
+        });
+
+    // Event listeners for the dropdowns of the axis in the scatterplot
+    d3.select('#selectButtonXaxis').on('change', function (d) {
+        // recover the option that has been chosen
+        var newX_label = d3.select(this).property('value');
+        var newY_label = d3.select('#selectButtonYaxis').property('value');
+        plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
+    });
+
+    d3.select('#selectButtonYaxis').on('change', function (d) {
+        var newX_label = d3.select('#selectButtonXaxis').property('value');
+        var newY_label = d3.select(this).property('value');
+        plots['scatter_plot'].update(plots, [earthquakeData.features, 'filter', newX_label, newY_label]);
+    });
+}

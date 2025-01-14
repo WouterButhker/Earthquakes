@@ -1,41 +1,185 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
 #content {
     display: flex;
-    flex-direction: row;
-
-    justify-content: space-evenly;
+    flex-direction: column;
     height: 100vh;
     width: 100%;
-    column-gap: 20px;
+    gap: 10px;
 }
 
-#columnDiv {
+/* ============================ */
+/* Top section: title, controls */
+/* ============================ */
+
+#topSection {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    gap: 10px;
 }
 
-#dateSelectionDiv {
-    min-width: 30%;
-    min-height: 100px;
+#controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
 }
 
-#map {
-    min-width: 30%;
-    height: 600px;
+#controls select,
+#controls button {
+    padding: 5px;
+    font-size: 0.9em;
 }
 
-#scatterplotDiv {
-    min-width: 30%;
-    min-height: 100px;
+#resetButton {
+    font-size: 0.9em;
+    padding: 5px 10px;
+    height: auto;
+    align-self: center;
 }
 
-#detailedDiv {
-    min-width: 100px;
-    min-height: 100px;
+/* Map view container */
+
+#mapControlsContainer {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+    gap: 5px;
+}
+
+.map-controls-header {
+    font-size: 1em;
+    font-weight: bold;
+    text-align: center;
+    color: #555;
+}
+
+.map-controls-content {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Toggle switch */
+
+.toggle-switch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.toggle-switch input {
+    display: none;
+}
+
+.toggle-switch label {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch label:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: background-color 0.3s;
+}
+
+.toggle-switch label:after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + label:before {
+    background-color: #4caf50;
+}
+
+.toggle-switch input:checked + label:after {
+    transform: translateX(20px);
+}
+
+select:disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+}
+
+#viewToggleText {
+    font-size: 0.9em;
+    color: #333;
+    text-align: center;
+    margin-bottom: 4px;
+}
+
+/* ===================== */
+/* Middle section: plots */
+/* ===================== */
+
+#middleSection {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: stretch;
+    flex-grow: 1;
+    gap: 10px;
+}
+
+.plot-container {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+    padding: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 55vh;
+}
+
+#map.plot-container {
+    height: 100%;
+}
+
+.plot-header {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    color: #b0b0b0;
+    text-align: center;
+}
+
+svg {
+    width: 100%;
+    height: 100%;
 }
 
 .ol-dragbox {
-    background-color: rgba(255,255,255,0.8);
-    border-color: rgba(0,0,0,0.5);
+    background-color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.5);
     border-width: 1px;
     border-style: solid;
     border-radius: 0;
@@ -46,21 +190,42 @@
     visibility: hidden;
 }
 
+.scatter-controls {
+    display: flex;
+    justify-content: space-evenly;
+}
 
+/* ================================== */
+/* Bottom section: legend and details */
+/* ================================== */
 
-
-#legend {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    width: 220px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid #aaa;
+#bottomSection {
+    display: flex;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
     border-radius: 5px;
+    gap: 10px;
+}
+
+#legend,
+#detailedViewDiv,
+#pointsOfInterestContainer {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.9);
     padding: 10px;
     font-family: sans-serif;
     font-size: 0.85em;
-    pointer-events: auto;
+}
+
+/* Legend */
+
+#legend {
+    display: flex;
+    justify-content: space-evenly;
+    padding: 10px;
 }
 
 #legend h3 {
@@ -106,3 +271,26 @@
     vertical-align: middle;
 }
 
+/* Details view */
+
+#detailedViewDiv text {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.details-header {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.details-content {
+    font-size: 0.9em;
+    line-height: 1.5em;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px;
+    background-color: #f7f7f7;
+}
