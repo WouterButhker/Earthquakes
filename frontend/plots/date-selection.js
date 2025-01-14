@@ -158,6 +158,11 @@ export const date_selection = {
                 console.log(startYear, endYear);
                 let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
 
+                // Prevent rendering if no data is found
+                if (selectedData.length === 0) {
+                    console.log('No data found for selected year range');
+                    return;
+                }
                 plots['date_selection'].update(plots, selectedData);
             });
 
