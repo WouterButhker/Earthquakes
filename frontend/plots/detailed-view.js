@@ -11,8 +11,16 @@ export const detailed_view = {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
         // console.log(selectedDataPoint);
 
-        if (selectedDataPoint === undefined) {
+        if (selectedDataPoint === undefined || (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 0)) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+            return;
+        }
+
+        if (Array.isArray(selectedDataPoint) && selectedDataPoint.length > 1) {
+            d3.select('#detailed_text').select('text').text('[multiple earthquakes selected. Please select a single earthquake to view details]');
+            return;
+        } else if (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 1) {
+            selectedDataPoint = selectedDataPoint[0];
         }
 
         const detailed_text = d3.select('#detailed_text').select('text');

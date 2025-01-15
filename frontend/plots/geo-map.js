@@ -286,6 +286,8 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         );
 
         plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
+        const data = [selectedData, tsunamiDataFeatures];
+        plots['detailed_view'].update(plots, data);
         plots['date_selection'].update(plots, selectedData);
     });
 
