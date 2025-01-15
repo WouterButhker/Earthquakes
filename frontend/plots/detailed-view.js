@@ -9,7 +9,7 @@ export const detailed_view = {
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
-        console.log(selectedDataPoint);
+        // console.log(selectedDataPoint);
 
         if (selectedDataPoint === undefined) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
