@@ -13,7 +13,14 @@ export const detailed_view = {
 
         if (selectedDataPoint === undefined) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+            return
         }
+        // if multiple earthquakes are selected, only show the first one
+        if (selectedDataPoint.length > 1) {
+            d3.select('#detailed_text').select('text').text('[multiple earthquakes selected]');
+            return
+        }
+
 
         const detailed_text = d3.select('#detailed_text').select('text');
 

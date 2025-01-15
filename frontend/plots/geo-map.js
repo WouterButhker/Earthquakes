@@ -160,28 +160,17 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
     select.on('select', function () {
         const selectedFeatures = select.getFeatures();
         if (selectedFeatures.getArray().length !== 0) {
+            // get the value of the selectButtonXaxis and selectButtonYaxis
+            const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+            const yaxis_label = d3.select('#selectButtonYaxis').property('value');
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
             const selectedDataPoint = earthquakeData.features.filter(
                 (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
             plots['date_selection'].update(plots, [selectedDataPoint]);
+            plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label]);
         }
-        // get the value of the selectButtonXaxis and selectButtonYaxis
-        const xaxis_label = d3.select('#selectButtonXaxis').property('value');
-        const yaxis_label = d3.select('#selectButtonYaxis').property('value');
-        const selectedData = earthquakeData.features.filter(
-            (d) =>
-                selectedFeatures
-                    .getArray()
-                    .map((f) => f.get(xaxis_label))
-                    .includes(d.properties[xaxis_label]) &&
-                selectedFeatures
-                    .getArray()
-                    .map((f) => f.get(yaxis_label))
-                    .includes(d.properties[yaxis_label]),
-        );
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
     });
 
     return select;
@@ -269,6 +258,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
 
         plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
         plots['date_selection'].update(plots, selectedData);
+        plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
     });
 
     // clear selection when drawing a new box and when clicking on the map

@@ -148,6 +148,9 @@ export const scatter_plot = {
         if (pointsToHighlight === undefined) {
             this.update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label]);
         }
+        else {
+            this.update(plots, [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label]);
+        }
 
         // TODO add zooming within the map
         // const gx = svg.append("g");
@@ -201,7 +204,8 @@ export const scatter_plot = {
             const highlight_points = pointsToHighlight.map((d) => {
                 const x_value = d.properties[xaxis_label];
                 const y_value = d.properties[yaxis_label];
-                return { x_value, y_value };
+                const id_value = d.properties.Id;
+                return { x_value, y_value, id_value };
             });
         
             // Remove the undefined features that are undefined for the all the points
@@ -212,7 +216,8 @@ export const scatter_plot = {
             const all_points_without_highlighted = allDataFeatures_without_highlight.map((d) => {
                 const x_value = d.properties[xaxis_label];
                 const y_value = d.properties[yaxis_label];
-                return { x_value, y_value };
+                const id_value = d.properties.Id;
+                return { x_value, y_value, id_value };
             });
 
             const plotGroup = svg.select('g');
@@ -303,15 +308,38 @@ export function addScatterplotAxisInteractions(plots, earthquakeData) {
     // TODO keep the highlighted points when changing the axes
     // Event listeners for the dropdowns of the axis in the scatterplot
     d3.select('#selectButtonXaxis').on('change', function (d) {
-        // recover the option that has been chosen
+        // Retrieve the x and y axis labels
         var newX_label = d3.select(this).property('value');
         var newY_label = d3.select('#selectButtonYaxis').property('value');
-        plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label]);
+
+        // Retrieve all id_values from the highlighted points
+        const highlight_points = d3.selectAll('.highlighted-point').data();
+        const highlighted_ids = new Set(highlight_points.map((d) => d.id_value));
+
+        // Get all the points from the ids of the highlighted points
+        const highlightedDatePoints = earthquakeData.features.filter(
+            (d) => highlighted_ids.has(d.properties.Id),
+        );
+
+        // Render the new scatterplot
+        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label]);
     });
 
     d3.select('#selectButtonYaxis').on('change', function (d) {
+        // Retrieve the x and y axis labels
         var newX_label = d3.select('#selectButtonXaxis').property('value');
         var newY_label = d3.select(this).property('value');
+
+        // Retrieve all id_values from the highlighted points
+        const highlight_points = d3.selectAll('.highlighted-point').data();
+        const highlighted_ids = new Set(highlight_points.map((d) => d.id_value));
+
+        // Get all the points from the ids of the highlighted points
+        const highlightedDatePoints = earthquakeData.features.filter(
+            (d) => highlighted_ids.has(d.properties.Id),
+        );
+
+        // Render the new scatterplot
         plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label]);
     });
 }
