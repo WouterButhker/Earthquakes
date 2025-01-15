@@ -165,6 +165,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                 (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, [selectedDataPoint]);
         }
         // get the value of the selectButtonXaxis and selectButtonYaxis
         const xaxis_label = d3.select('#selectButtonXaxis').property('value');
@@ -181,7 +182,6 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                     .includes(d.properties[yaxis_label]),
         );
         plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
-        plots['date_selection'].update(plots, selectedData);
     });
 
     return select;
