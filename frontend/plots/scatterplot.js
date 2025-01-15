@@ -164,6 +164,7 @@ export const scatter_plot = {
                                 value.map((v) => v.y_value).includes(d.properties[yaxis_label]),
                         );
                         plots['date_selection'].update(plots, selectedDataFeatures);
+                        plots['geo_map'].update(plots, [selectedDataFeatures]);
                     } else {
                         plotGroup.selectAll('circle').style('fill', 'black');
                     }

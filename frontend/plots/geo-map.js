@@ -11,13 +11,14 @@ import Point from 'ol/geom/Point';
 import { Stroke, Style } from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly, click, pointerMove } from 'ol/events/condition';
+import { platformModifierKeyOnly, click } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from 'd3';
 import { getStyle, updateLegend } from './geo-map-styling';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
+let allEarthquakeData = null;
 
 // Default OSM layer
 const openStreetMap = new TileLayer({
@@ -43,6 +44,7 @@ export const geo_map = {
     render(plots, data) {
         let [earthquakeData, tectonicPlatesData, tsunamiDataFeatures] = data;
 
+        allEarthquakeData = earthquakeData;
         // Generate the earthquake layer
         earthquakesLayer = new VectorLayer({
             source: new VectorSource({
@@ -123,7 +125,28 @@ export const geo_map = {
         const dragBox = addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots);
     },
     update(plots, data) {
-        this.render(plots, data);
+        // this.render(plots, data);
+        let [earthquakeDataFeatures] = data;
+
+        console.log(earthquakeDataFeatures);
+
+        let geojson;
+        if (earthquakeDataFeatures.length === 0) {
+            geojson = allEarthquakeData;
+        } else {
+            geojson = {
+                "type": "FeatureCollection",
+                "features": earthquakeDataFeatures
+            };
+        }
+        const selectedFeatures = new GeoJSON().readFeatures(geojson, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+        })
+
+        const source = earthquakesLayer.getSource()
+        source.clear();
+        source.addFeatures(selectedFeatures);
     },
 };
 
