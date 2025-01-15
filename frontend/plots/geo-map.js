@@ -102,8 +102,8 @@ export const geo_map = {
             }),
             style: new Style({
                 stroke: new Stroke({
-                    color: 'blue',
-                    width: 2,
+                    color: 'red',
+                    width: 1,
                 }),
             }),
         });
@@ -162,15 +162,14 @@ const selectedStyle = function (feature) {
         const stroke = new Stroke({ color: '#000000', width: 2 });
         style.getImage().setStroke(stroke);
         return style;
+    } else {
+        return new Style({
+            stroke: new Stroke({
+                color: 'red',
+                width: 2,
+            }),
+        });
     }
-
-    // style for selected lines
-    return new Style({
-        stroke: new Stroke({
-            color: 'green',
-            width: 2,
-        }),
-    });
 };
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
@@ -182,21 +181,21 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 
     select.on('select', function () {
         const selectedFeatures = select.getFeatures();
-        if (selectedFeatures.getArray().length !== 0) {
+        const selectedFeaturesArr = selectedFeatures.getArray().filter(feature => feature.getGeometry().getType() === 'Point');
+        if (selectedFeaturesArr.length !== 0) {
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
             const selectedDataPoint = earthquakeData.features.filter(
-                (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
+                (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
         }
+
         const selectedData = earthquakeData.features.filter(
             (d) =>
-                selectedFeatures
-                    .getArray()
+                selectedFeaturesArr
                     .map((f) => f.get('Mag'))
                     .includes(d.properties.Mag) &&
-                selectedFeatures
-                    .getArray()
+                selectedFeaturesArr
                     .map((f) => f.get('Focal Depth (km)'))
                     .includes(d.properties['Focal Depth (km)']),
         );
@@ -286,8 +285,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         );
 
         plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
-        const data = [selectedData, tsunamiDataFeatures];
-        plots['detailed_view'].update(plots, data);
+        plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
         plots['date_selection'].update(plots, selectedData);
     });
 
