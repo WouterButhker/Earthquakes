@@ -9,7 +9,7 @@ let width, height;
 
 export const scatter_plot = {
     render(plots, data) {
-        let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label] = data;
+        let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
         // set the value of the selectButtonXaxis and selectButtonYaxis to the chosen labels
         d3.select('#selectButtonXaxis').property('value', xaxis_label);
         d3.select('#selectButtonYaxis').property('value', yaxis_label);
@@ -112,28 +112,27 @@ export const scatter_plot = {
             .style('font-size', '12px')
             .style('fill', 'black')
             .text(yaxis_label);
+        
+        // Clicking behavior
+        plotGroup.on('click', function (chosenEvent) {
+            // check if an element is selected
+            if (chosenEvent.srcElement === null) {
+                return;
+            }
 
-        // TODO rotate the labels if a log scale is used
-
-        // Click behaviour
-        // TODO this does not work but it has to be fixed
-        // plotGroup.on('click', function (chosenEvent) {
-        //     // Make the chosen point green and all others black
-        //     d3.selectAll("circle").attr("fill", "black");
-        //     // d3.select(chosenEvent.srcElement).attr("fill", "green");
-
-        //     // Filter the current earthquake data to only include earthquakes with the same magnitude as the selected point
-        //     const selectedDataFeatures = earthquakeDataFeatures.filter(
-        //         (d) =>
-        //             d.properties[xaxis_label] == chosenEvent.srcElement.__data__.x_value &&
-        //             d.properties[yaxis_label] == chosenEvent.srcElement.__data__.y_value,
-        //     );
-        //     plots['date_selection'].update(plots, selectedDataFeatures);
-        //     plots['detailed_view'].update(plots, [selectedDataFeatures[0], tsunamiDataFeatures]);
-        // });
+            // Filter the current earthquake data to only include earthquakes with the same values as the chosen point
+            const selectedDataFeatures = allDataFeatures.filter(
+                (d) =>
+                    d.properties[xaxis_label] === chosenEvent.srcElement.__data__.x_value &&
+                    d.properties[yaxis_label] === chosenEvent.srcElement.__data__.y_value,
+            );
+            plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, selectedDataFeatures);
+            plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
+        });
+        // Add click behavior to points
 
         // from https://observablehq.com/@d3/brushable-scatterplot
-        // TODO only when ctrl is pressed
         // Brushing behavior
         const brush = d3
             .brush()
@@ -161,6 +160,7 @@ export const scatter_plot = {
                             value.map((v) => v.y_value).includes(d.properties[yaxis_label]),
                     );
                     plots['date_selection'].update(plots, selectedDataFeatures);
+                    plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                 } else {
                     plotGroup.selectAll('circle').style('fill', 'black');
                 }
@@ -195,7 +195,7 @@ export const scatter_plot = {
     },
     update(plots, data) {
         // this.render(plots, data);
-        let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label] = data;
+        let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
 
         allDataFeatures = allDataFeatures.filter(
             (d) => d.properties[xaxis_label] !== undefined && d.properties[yaxis_label] !== undefined,
@@ -302,7 +302,7 @@ const scatterplot_categorical_options = [
     'Total Damage Description', 'Total Houses Destroyed Description', 'Total Houses Damaged Description',
 ];
 
-export function addScatterplotAxisInteractions(plots, earthquakeData) {
+export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiData) {
     // Add the options to the dropdowns of the axis in the scatterplot
     d3.select('#selectButtonXaxis')
         .selectAll('myOptions')
@@ -344,7 +344,7 @@ export function addScatterplotAxisInteractions(plots, earthquakeData) {
         );
 
         // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label]);
+        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
     });
 
     d3.select('#selectButtonYaxis').on('change', function (d) {
@@ -362,6 +362,6 @@ export function addScatterplotAxisInteractions(plots, earthquakeData) {
         );
 
         // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label]);
+        plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
     });
 }

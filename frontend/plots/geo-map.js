@@ -169,7 +169,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
             plots['date_selection'].update(plots, [selectedDataPoint]);
-            plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label]);
+            plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
         }
     });
 
@@ -256,7 +256,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
                     .includes(d.properties[yaxis_label]),
         );
 
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
+        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
         plots['date_selection'].update(plots, selectedData);
         plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
     });

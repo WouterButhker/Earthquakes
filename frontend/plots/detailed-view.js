@@ -11,7 +11,7 @@ export const detailed_view = {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
         console.log(selectedDataPoint);
 
-        if (selectedDataPoint === undefined) {
+        if (selectedDataPoint === undefined || selectedDataPoint.length === 0) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
             return
         }
@@ -21,31 +21,26 @@ export const detailed_view = {
             return
         }
 
-
         const detailed_text = d3.select('#detailed_text').select('text');
 
-        if (selectedDataPoint === undefined) {
-            console.log('selected datapoint undefined');
-            detailed_text.text('[no earthquake selected]');
-        } else {
-            // Get a list of all the available properties of the selectedDataPoint
-            const listofProperties = Object.keys(selectedDataPoint.properties);
+        // Get a list of all the available properties of the selectedDataPoint
+        const listofProperties = Object.keys(selectedDataPoint[0].properties);
 
-            // TODO filter the list of properties to only show the relevant properties
+        // TODO filter the list of properties to only show the relevant properties
 
-            var new_detailed_text = listofProperties
-                .map((d) => d + ': ' + selectedDataPoint.properties[d])
-                .join('<br>');
+        var new_detailed_text = listofProperties
+            .map((d) => d + ': ' + selectedDataPoint[0].properties[d])
+            .join('<br>');
 
-            const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
-            // If there is a related tsunami, join the related tsunami to the detailed text
-            if (related_tsunami !== 'No related tsunamis') {
-                new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;
-            }
-
-            // set html text as the new detailed text
-            detailed_text.html(new_detailed_text);
+        const related_tsunami = getRelatedTsunamis(selectedDataPoint[0], tsunamiDataFeatures);
+        // If there is a related tsunami, join the related tsunami to the detailed text
+        if (related_tsunami !== 'No related tsunamis') {
+            new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;
         }
+
+        // set html text as the new detailed text
+        detailed_text.html(new_detailed_text);
+        
     },
 };
 
