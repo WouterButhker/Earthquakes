@@ -166,18 +166,21 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
         }
+        // get the value of the selectButtonXaxis and selectButtonYaxis
+        const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+        const yaxis_label = d3.select('#selectButtonYaxis').property('value');
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
                     .getArray()
-                    .map((f) => f.get('Mag'))
-                    .includes(d.properties.Mag) &&
+                    .map((f) => f.get(xaxis_label))
+                    .includes(d.properties[xaxis_label]) &&
                 selectedFeatures
                     .getArray()
-                    .map((f) => f.get('Focal Depth (km)'))
-                    .includes(d.properties['Focal Depth (km)']),
+                    .map((f) => f.get(yaxis_label))
+                    .includes(d.properties[yaxis_label]),
         );
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, 'Mag', 'Focal Depth (km)']);
+        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
         plots['date_selection'].update(plots, selectedData);
     });
 
@@ -248,21 +251,23 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
                 selectedFeatures.extend(boxFeatures);
             }
         }
-        // TODO filter this based on what has been selected as axes in the scatterplot
+        // get the value of the selectButtonXaxis and selectButtonYaxis
+        const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+        const yaxis_label = d3.select('#selectButtonYaxis').property('value');
         // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
                     .getArray()
-                    .map((f) => f.get('Mag'))
-                    .includes(d.properties.Mag) &&
+                    .map((f) => f.get(xaxis_label))
+                    .includes(d.properties[xaxis_label]) &&
                 selectedFeatures
                     .getArray()
-                    .map((f) => f.get('Focal Depth (km)'))
-                    .includes(d.properties['Focal Depth (km)']),
+                    .map((f) => f.get(yaxis_label))
+                    .includes(d.properties[yaxis_label]),
         );
 
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, 'Mag', 'Focal Depth (km)']);
+        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label]);
         plots['date_selection'].update(plots, selectedData);
     });
 

@@ -10,6 +10,9 @@ let width, height;
 export const scatter_plot = {
     render(plots, data) {
         let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label] = data;
+        // set the value of the selectButtonXaxis and selectButtonYaxis to the chosen labels
+        d3.select('#selectButtonXaxis').property('value', xaxis_label);
+        d3.select('#selectButtonYaxis').property('value', yaxis_label);
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -240,7 +243,6 @@ export const scatter_plot = {
 
         } else {
             const plotGroup = svg.select('g');
-            // Plot the points as circles
 
             plotGroup
                 .selectAll('circle')
@@ -298,6 +300,7 @@ export function addScatterplotAxisInteractions(plots, earthquakeData) {
             return d;
         });
 
+    // TODO keep the highlighted points when changing the axes
     // Event listeners for the dropdowns of the axis in the scatterplot
     d3.select('#selectButtonXaxis').on('change', function (d) {
         // recover the option that has been chosen

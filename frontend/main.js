@@ -29,10 +29,7 @@ plots['detailed_view'].render(plots, undefined);
 
 // Reset button
 d3.select('#resetButton').on('click', function () {
-    // set the value of the selectButtonXaxis and selectButtonYaxis to the default values
-    d3.select('#selectButtonXaxis').property('value', 'Mag');
-    d3.select('#selectButtonYaxis').property('value', 'Focal Depth (km)');
-    plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, 'Mag', 'Focal Depth (km)']);
+    plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, 'Mag', 'Focal Depth (km)']);
     plots['date_selection'].update(plots, earthquakeData.features);
     plots['detailed_view'].update(plots, [undefined, undefined]);
 });
@@ -72,12 +69,6 @@ d3.select('#pointOfInterest1').on('click', function () {
 d3.select('#pointOfInterest2').on('click', function () {
     // get the earthquake that has an id of "7843"
     const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '7843');
-    // plots['scatter_plot'].update(plots, [
-    //     earthquakeData.features,
-    //     'filter',
-    //     'Total Houses Destroyed',
-    //     'Total Injuries',
-    // ]);
     plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, 'Total Houses Destroyed', 'Total Injuries']);
     plots['scatter_plot'].update(plots, [earthquakeData.features, interestPoint, 'Total Houses Destroyed', 'Total Injuries']);
     plots['date_selection'].update(plots, interestPoint);
