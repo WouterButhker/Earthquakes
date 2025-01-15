@@ -161,7 +161,7 @@ select:disabled {
     height: 55vh;
 }
 
-#map.plot-container {
+#map {
     height: 100%;
 }
 
