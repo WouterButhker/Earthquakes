@@ -177,7 +177,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                     .map((f) => f.get('Focal Depth (km)'))
                     .includes(d.properties['Focal Depth (km)']),
         );
-        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
+        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
     });
 
@@ -262,7 +262,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
                     .includes(d.properties['Focal Depth (km)']),
         );
 
-        plots['scatter_plot'].update(plots, [selectedData, 'highlight', 'Mag', 'Focal Depth (km)']);
+        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, 'Mag', 'Focal Depth (km)']);
         plots['date_selection'].update(plots, selectedData);
     });
 
