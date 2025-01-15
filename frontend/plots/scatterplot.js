@@ -65,10 +65,9 @@ export const scatter_plot = {
         const yAxis = d3.axisLeft(yScale);
 
         // Append axes to the plot group
-        plotGroup.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
+        plotGroup.append('g').attr('class', 'x-axis').attr('transform', `translate(0, ${height})`).call(xAxis);
 
-        plotGroup.append('g').call(yAxis);
-
+        plotGroup.append('g').attr('class', 'y-axis').call(yAxis);
         // Add axis labels
         plotGroup
             .append('text')
@@ -78,6 +77,30 @@ export const scatter_plot = {
             .style('font-size', '12px')
             .style('fill', 'black')
             .text(xaxis_label);
+
+        // TODO do we want to have four labels or should the axes be longer?
+        // rotate the tick labels by 45 degrees and only keep 4 labels
+        if (xExtent[1] > 1000) {
+            plotGroup.selectAll('.x-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
+            // only keep first, second, fourth and last tick label
+            plotGroup.selectAll('.x-axis .tick text')
+                .filter((d, i, nodes) => {
+                    const totalTicks = nodes.length;
+                    return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
+                })
+                .remove();
+        }
+
+        if (yExtent[1] > 1000) {
+            plotGroup.selectAll('.y-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
+            // only keep first, second, fourth and last tick label
+            plotGroup.selectAll('.y-axis .tick text')
+            .filter((d, i, nodes) => {
+                const totalTicks = nodes.length;
+                return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
+            })
+            .remove();
+        }
 
         plotGroup
             .append('text')
@@ -305,7 +328,6 @@ export function addScatterplotAxisInteractions(plots, earthquakeData) {
             return d;
         });
 
-    // TODO keep the highlighted points when changing the axes
     // Event listeners for the dropdowns of the axis in the scatterplot
     d3.select('#selectButtonXaxis').on('change', function (d) {
         // Retrieve the x and y axis labels
