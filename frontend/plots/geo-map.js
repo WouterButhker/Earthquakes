@@ -188,6 +188,8 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                 (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+        } else {
+            plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
         }
 
         const selectedData = earthquakeData.features.filter(
