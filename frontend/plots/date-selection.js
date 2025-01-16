@@ -11,8 +11,13 @@ const legendWidth = 200,
 // Offset for year label from the y-axis (avoid overlap with years)
 const yearLabelOffset = 25;
 
+let dataHistory = [];  // Initialize the data history stack
+
 export const date_selection = {
     render(plots, data) {
+
+        if (data) saveCurrentDataState(data);  // Save the current data state before any changes
+        // console.log(dataHistory);
         let earthquakeDataFeatures = data;
 
         // If width is not set, use the first client params for all next renders
@@ -65,31 +70,43 @@ export const date_selection = {
             }
         }
 
-        console.log(yearMonthData);
-
-        const all_years = yearMonthData.map((d) => d.year);
-
-        let uniqueYears = new Set(all_years);
-        let numUniqueYears = uniqueYears.size;
+        // console.log(yearMonthData);
 
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
 
-        console.log(`unique years: ${numUniqueYears}`);
-        console.log(`min and max years: ${minYear} - ${maxYear}`);
-        console.log(`Year range: ${yrRange}`);
+        // console.log(`unique years: ${numUniqueYears}`);
+        // console.log(`min and max years: ${minYear} - ${maxYear}`);
+        // console.log(`Year range: ${yrRange}`);
+
+        let lastStateData = []; 
 
         if (yrRange > 500) {
             rangeSize = 500;
-        } else if (yrRange > 100 && yrRange <= 500) {
+            backButton.disabled = true;
+        } else if (yrRange >= 100 && yrRange < 500) {
             rangeSize = 100;
-        } else if (yrRange > 10 && yrRange <= 100) {
+            backButton.disabled = false;
+            lastStateData = dataHistory[0];
+    
+        } else if (yrRange >= 10 && yrRange < 100) {
             rangeSize = 10;
-        } else if (yrRange >= 0 && yrRange <= 10) {
+            backButton.disabled = false;
+            lastStateData = dataHistory[1];
+        
+        } else if (yrRange >= 0 && yrRange < 10) {
             rangeSize = 1;
+            backButton.disabled = false;
+            lastStateData = dataHistory[2];
         }
-
-        console.log(`Range size: ${rangeSize}`);
+        console.log(dataHistory);
+        
+        d3.select("#backButton").on("click", function() {
+            dataHistory.pop();
+            plots['date_selection'].update(plots, lastStateData);
+        });
+        // 
+        // console.log(`Range size: ${rangeSize}`);
 
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
@@ -99,7 +116,7 @@ export const date_selection = {
             data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
 
-        console.log(count_data);
+        // console.log(count_data);
 
         // Create scales
         const xScale = d3
@@ -155,7 +172,7 @@ export const date_selection = {
                 const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
-                console.log(startYear, endYear);
+                // console.log(startYear, endYear);
                 let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
 
                 // Prevent rendering if no data is found
@@ -222,10 +239,10 @@ export const date_selection = {
             
             // Print selected data and their corresponding year ranges to the console
             selectedRanges.forEach(range => {
-                console.log(`Selected Year Range: ${range.range}`);
+                // console.log(`Selected Year Range: ${range.range}`);
                 range.data.filter(md => selectedMonths.includes(md.month))
                 .forEach(data => {
-                    console.log(`Month: ${data.month + 1}, Count: ${data.count}`);
+                    // console.log(`Month: ${data.month + 1}, Count: ${data.count}`);
                 });
             });
             
@@ -238,7 +255,6 @@ export const date_selection = {
                 });
         }
         
-
         function clearBrush() {
             svg.select('.brush').call(brush.move, null);
             }
@@ -248,6 +264,14 @@ export const date_selection = {
         this.render(plots, data);
     },
 };
+
+function saveCurrentDataState(data) {
+    const dataString = JSON.stringify(data);
+    if (!dataHistory.some(history => JSON.stringify(history) === dataString)) {
+        dataHistory.push(JSON.parse(dataString));  // Deep copy to preserve data integrity
+    }
+}
+
 
 function aggregateDataByYearRange(yearMonthData, startYear, endYear) {
     const filteredData = yearMonthData.filter((d) => d.year >= startYear && d.year <= endYear);
