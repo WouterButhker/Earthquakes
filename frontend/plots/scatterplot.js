@@ -261,9 +261,9 @@ export const scatter_plot = {
                 .attr('class', 'highlighted-point')
                 .attr('cx', (d) => xScale(d.x_value))
                 .attr('cy', (d) => yScale(d.y_value))
-                .attr('r', 4)
+                .attr('r', 6)
                 .attr('fill', 'blue')
-                // .attr('stroke', 'black')
+                .attr('stroke', 'black')
                 .raise();
 
         } else {
