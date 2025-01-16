@@ -31,7 +31,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 15px;
-    padding-bottom: 10px;
+    padding: 10px 0 10px 0;
     background-color: #f8f9fa;
 }
 
@@ -191,10 +191,6 @@ svg {
 
 #bottomSection {
     display: flex;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 5px;
     gap: 10px;
 }
 
@@ -283,6 +279,7 @@ svg {
     border-radius: 5px;
     padding: 8px;
     background-color: #f7f7f7;
+    column-count: 2;
 }
 
 /* Points of Interest view */
