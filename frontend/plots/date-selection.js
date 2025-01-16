@@ -186,6 +186,63 @@ export const date_selection = {
             .attr('dy', -yearLabelOffset);
 
         generateLegend(margin.left + (width - legendWidth) / 2, countExtent);
+
+        const brush = d3.brush()
+            .extent([[0, 0], [width, height]])
+            .on('start brush end', brushed);
+
+        const brushG = g.append('g')
+            .attr('class', 'brush')
+            .call(brush);
+
+              
+        function brushed(event) {
+            const selection = event.selection;
+            if (!selection) {
+                console.log('No selection');
+                return;
+            }
+            
+            const [[x0, y0], [x1, y1]] = selection;
+            
+            // Check for any overlap between the selection and the cell positions for rows and columns
+            const selectedRanges = count_data.filter(d => {
+                const yPosition = yScale(d.range);
+                const yHeight = yScale.bandwidth();
+                // Check if there's any overlap in the Y-axis
+                return y0 <= yPosition + yHeight && yPosition <= y1;
+            });
+            
+            const selectedMonths = d3.range(0, 12).filter(month => {
+                const xPosition = xScale(month);
+                const xWidth = xScale.bandwidth();
+                // Check if there's any overlap in the X-axis
+                return x0 <= xPosition + xWidth && xPosition <= x1;
+            });
+            
+            // Print selected data and their corresponding year ranges to the console
+            selectedRanges.forEach(range => {
+                console.log(`Selected Year Range: ${range.range}`);
+                range.data.filter(md => selectedMonths.includes(md.month))
+                .forEach(data => {
+                    console.log(`Month: ${data.month + 1}, Count: ${data.count}`);
+                });
+            });
+            
+            // Update the cell colors based on selection
+            rows.selectAll('.cell')
+                .style('fill', function (d) {
+                    const isInRange = selectedRanges.some(range => range.range === this.parentNode.__data__.range);
+                    const isMonthSelected = selectedMonths.includes(d.month);
+                    return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
+                });
+        }
+        
+
+        function clearBrush() {
+            svg.select('.brush').call(brush.move, null);
+            }
+
     },
     update(plots, data) {
         this.render(plots, data);
