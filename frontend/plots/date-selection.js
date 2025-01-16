@@ -37,9 +37,8 @@ export const date_selection = {
             (v) => v.length, // Counting occurrences
             (d) => parseInt(d.properties.Year),
             (d) => {
-                // Default to January (0) if the month is undefined or invalid
                 const month = parseInt(d.properties.Mo);
-                return isNaN(month) ? 0 : month - 1; // 0-based month, adjust if necessary
+                return isNaN(month) || month < 1 || month > 12 ? 12 : month - 1; // Map undefined or invalid months to `12`
             },
         );
 
@@ -55,16 +54,14 @@ export const date_selection = {
         for (let year = yearExtent[0]; year <= yearExtent[1]; year++) {
             let monthMap = counts.get(year);
             if (!monthMap) {
-                monthMap = new Map(Array.from({ length: 12 }, (_, i) => [i, 0])); // Create empty month map for missing years
+                monthMap = new Map(Array.from({ length: 13 }, (_, i) => [i, 0])); // Including `12` index
             } else {
-                // Ensure all months are present in the monthMap
-                for (let i = 1; i < 12; i++) {
+                for (let i = 0; i <= 12; i++) { // Ensure months 0-12 are considered
                     if (!monthMap.has(i)) {
                         monthMap.set(i, 0); // Set count to 0 for missing months
                     }
                 }
             }
-
             for (let [month, count] of monthMap.entries()) {
                 yearMonthData.push({ year, month, count });
             }
@@ -84,27 +81,32 @@ export const date_selection = {
         if (yrRange > 500) {
             rangeSize = 500;
             backButton.disabled = true;
-        } else if (yrRange >= 100 && yrRange < 500) {
+            dataHistory = [data];
+        } else if (yrRange >= 100 && yrRange <= 500) {
             rangeSize = 100;
             backButton.disabled = false;
             lastStateData = dataHistory[0];
     
-        } else if (yrRange >= 10 && yrRange < 100) {
+        } else if (yrRange >= 10 && yrRange <= 100) {
             rangeSize = 10;
             backButton.disabled = false;
             lastStateData = dataHistory[1];
         
-        } else if (yrRange >= 0 && yrRange < 10) {
+        } else if (yrRange >= 0 && yrRange <= 10) {
             rangeSize = 1;
             backButton.disabled = false;
             lastStateData = dataHistory[2];
+            if (dataHistory.length == 3){
+                lastStateData = dataHistory[1];
+            }
         }
-        console.log(dataHistory);
         
         d3.select("#backButton").on("click", function() {
             dataHistory.pop();
             plots['date_selection'].update(plots, lastStateData);
         });
+
+
         // 
         // console.log(`Range size: ${rangeSize}`);
 
@@ -121,7 +123,7 @@ export const date_selection = {
         // Create scales
         const xScale = d3
             .scaleBand()
-            .domain(d3.range(0, 12)) // Months are 0-indexed (0 = January, 11 = December)
+            .domain([...d3.range(0, 12), 12]) // Appending `12` for undefined months
             .range([0, width])
             .padding(0.05);
 
@@ -157,10 +159,11 @@ export const date_selection = {
 
         // Add x-axis
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
-            // Format month numbers to names
+            if (d === 12) return 'Undefined'; // Label the undefined month at the end
             const formatMonth = d3.timeFormat('%b');
             return formatMonth(new Date(2020, d, 1));
         });
+        
         g.append('g').attr('transform', `translate(0,${height})`).call(xAxis);
 
         // Add y-axis
