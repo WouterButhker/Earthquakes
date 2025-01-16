@@ -154,6 +154,7 @@ export const scatter_plot = {
                     plots['date_selection'].update(plots, selectedDataFeatures);
                     plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
                     plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
+                    plots['geo_map'].update(plots, [selectedDataFeatures]);
 
                 }
                 // Remove the brush after the selection
@@ -226,8 +227,12 @@ export const scatter_plot = {
                 const id_value = d.properties.Id;
                 return { x_value, y_value, id_value };
             });
+            // Message that there are no points to highlight due to missing data
             if (highlight_points.length == 0) {
-                // TODO add message that there are no points to highlight due to missing data
+                d3.select('#scatterplot_message').html("Earthquake is not highlighted due to missing data.");
+            }
+            else  {
+                d3.select('#scatterplot_message').html("");
             }
         
             // Remove the undefined features that are undefined for the all the points
@@ -362,6 +367,6 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
         );
 
         // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
+        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
     });
 }

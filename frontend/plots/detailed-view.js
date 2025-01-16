@@ -9,35 +9,34 @@ export const detailed_view = {
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
-        console.log(selectedDataPoint);
 
-        if (selectedDataPoint === undefined || selectedDataPoint.length === 0) {
+        if (selectedDataPoint === undefined || (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 0)) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
             d3.select('#poi_text').text('[no earthquakes selected]');
             return
         }
-        // if multiple earthquakes are selected, only show the first one
-        if (selectedDataPoint.length > 1) {
-            d3.select('#detailed_text').select('text').text('[multiple earthquakes selected]');
+        if (Array.isArray(selectedDataPoint) && selectedDataPoint.length > 1) {
+            d3.select('#detailed_text').select('text').text('[multiple earthquakes selected. Please select a single earthquake to view details]');
             d3.select('#poi_text').text('[multiple earthquakes selected]');
-            return
+            return;
+        } else if (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 1) {
+            selectedDataPoint = selectedDataPoint[0];
         }
 
-        // TODO add stuff of point of interest here
-        changePOI(selectedDataPoint[0]);
-
+        // Change the Point of Interest text
+        changePOI(selectedDataPoint);
         const detailed_text = d3.select('#detailed_text').select('text');
 
         // Get a list of all the available properties of the selectedDataPoint
-        const listofProperties = Object.keys(selectedDataPoint[0].properties);
+        const listofProperties = Object.keys(selectedDataPoint.properties);
 
         // TODO filter the list of properties to only show the relevant properties
 
         var new_detailed_text = listofProperties
-            .map((d) => d + ': ' + selectedDataPoint[0].properties[d])
+            .map((d) => d + ': ' + selectedDataPoint.properties[d])
             .join('<br>');
 
-        const related_tsunami = getRelatedTsunamis(selectedDataPoint[0], tsunamiDataFeatures);
+        const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
         // If there is a related tsunami, join the related tsunami to the detailed text
         if (related_tsunami !== 'No related tsunamis') {
             new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;

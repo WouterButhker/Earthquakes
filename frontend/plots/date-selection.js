@@ -65,7 +65,7 @@ export const date_selection = {
             }
         }
 
-        console.log(yearMonthData);
+        // console.log(yearMonthData);
 
         const all_years = yearMonthData.map((d) => d.year);
 
@@ -75,9 +75,9 @@ export const date_selection = {
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
 
-        console.log(`unique years: ${numUniqueYears}`);
-        console.log(`min and max years: ${minYear} - ${maxYear}`);
-        console.log(`Year range: ${yrRange}`);
+        // console.log(`unique years: ${numUniqueYears}`);
+        // console.log(`min and max years: ${minYear} - ${maxYear}`);
+        // console.log(`Year range: ${yrRange}`);
 
         if (yrRange > 500) {
             rangeSize = 500;
@@ -89,7 +89,7 @@ export const date_selection = {
             rangeSize = 1;
         }
 
-        console.log(`Range size: ${rangeSize}`);
+        // console.log(`Range size: ${rangeSize}`);
 
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
@@ -99,7 +99,7 @@ export const date_selection = {
             data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
 
-        console.log(count_data);
+        // console.log(count_data);
 
         // Create scales
         const xScale = d3
@@ -155,7 +155,7 @@ export const date_selection = {
                 const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
-                console.log(startYear, endYear);
+                // console.log(startYear, endYear);
                 let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
 
                 // Prevent rendering if no data is found

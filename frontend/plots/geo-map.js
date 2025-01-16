@@ -11,13 +11,14 @@ import Point from 'ol/geom/Point';
 import { Stroke, Style } from 'ol/style';
 import { DragBox, Select } from 'ol/interaction';
 import * as olProj from 'ol/proj';
-import { platformModifierKeyOnly, click, pointerMove } from 'ol/events/condition';
+import { platformModifierKeyOnly, click } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from 'd3';
 import { getStyle, updateLegend } from './geo-map-styling';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
+let allEarthquakeData = null;
 
 // Default OSM layer
 const openStreetMap = new TileLayer({
@@ -43,6 +44,7 @@ export const geo_map = {
     render(plots, data) {
         let [earthquakeData, tectonicPlatesData, tsunamiDataFeatures] = data;
 
+        allEarthquakeData = earthquakeData;
         // Generate the earthquake layer
         earthquakesLayer = new VectorLayer({
             source: new VectorSource({
@@ -100,8 +102,8 @@ export const geo_map = {
             }),
             style: new Style({
                 stroke: new Stroke({
-                    color: 'blue',
-                    width: 2,
+                    color: 'red',
+                    width: 1,
                 }),
             }),
         });
@@ -123,7 +125,28 @@ export const geo_map = {
         const dragBox = addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures, plots);
     },
     update(plots, data) {
-        this.render(plots, data);
+        // this.render(plots, data);
+        let [earthquakeDataFeatures] = data;
+
+        console.log(earthquakeDataFeatures);
+
+        let geojson;
+        if (earthquakeDataFeatures.length === 0) {
+            geojson = allEarthquakeData;
+        } else {
+            geojson = {
+                "type": "FeatureCollection",
+                "features": earthquakeDataFeatures
+            };
+        }
+        const selectedFeatures = new GeoJSON().readFeatures(geojson, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+        })
+
+        const source = earthquakesLayer.getSource()
+        source.clear();
+        source.addFeatures(selectedFeatures);
     },
 };
 
@@ -139,15 +162,14 @@ const selectedStyle = function (feature) {
         const stroke = new Stroke({ color: '#000000', width: 2 });
         style.getImage().setStroke(stroke);
         return style;
+    } else {
+        return new Style({
+            stroke: new Stroke({
+                color: 'red',
+                width: 2,
+            }),
+        });
     }
-
-    // style for selected lines
-    return new Style({
-        stroke: new Stroke({
-            color: 'green',
-            width: 2,
-        }),
-    });
 };
 
 function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots) {
@@ -159,17 +181,24 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 
     select.on('select', function () {
         const selectedFeatures = select.getFeatures();
-        if (selectedFeatures.getArray().length !== 0) {
-            // get the value of the selectButtonXaxis and selectButtonYaxis
-            const xaxis_label = d3.select('#selectButtonXaxis').property('value');
-            const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+        const selectedFeaturesArr = selectedFeatures.getArray().filter(feature => feature.getGeometry().getType() === 'Point');
+        // get the value of the selectButtonXaxis and selectButtonYaxis
+        const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+        const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+        if (selectedFeaturesArr.length !== 0) {            
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
             const selectedDataPoint = earthquakeData.features.filter(
-                (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
+                (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [[selectedDataPoint], tsunamiDataFeatures]);
             plots['date_selection'].update(plots, [selectedDataPoint]);
             plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
+        } else {
+            // TODO check if this is correct
+            console.log("No selected features");
+            plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, earthquakeData.features);
+            plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
         }
     });
 
