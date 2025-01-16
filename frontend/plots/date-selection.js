@@ -159,7 +159,7 @@ export const date_selection = {
 
         // Add x-axis
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
-            if (d === 12) return 'Undefined'; // Label the undefined month at the end
+            if (d === 12) return 'Undef'; // Label the undefined month at the end
             const formatMonth = d3.timeFormat('%b');
             return formatMonth(new Date(2020, d, 1));
         });
@@ -215,15 +215,41 @@ export const date_selection = {
             .attr('class', 'brush')
             .call(brush);
 
-              
         function brushed(event) {
             const selection = event.selection;
             if (!selection) {
                 console.log('No selection');
+                clearBrush(); // Clear visual selection when the brush is cleared
                 return;
             }
             
             const [[x0, y0], [x1, y1]] = selection;
+            const selectedYearRanges = [];
+            const selectedMonthRanges = [];
+
+
+            // Determine which year ranges are selected based on the brush's Y-axis overlap
+            svg.selectAll('.row').each(function(d) {
+                const yPosition = yScale(d.range);
+                const yHeight = yScale.bandwidth();
+                if (y0 <= yPosition + yHeight && yPosition <= y1) {
+                    const yearRange = d.range.match(/(?<!\d)-?\d+/g).map(Number);
+                    selectedYearRanges.push({start: yearRange[0], end: yearRange.length > 1 ? yearRange[1] : yearRange[0]});
+                }
+            });
+
+            // Determine which months are selected based on the brush's X-axis overlap
+            svg.selectAll('.cell').each(function(d) {
+                const xPosition = xScale(d.month);
+                const xWidth = xScale.bandwidth();
+                if (x0 <= xPosition + xWidth && xPosition <= x1) {
+                    selectedMonthRanges.push(d.month);
+                }
+            });
+
+            // Filter the data based on the selected year ranges and months
+            let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
+            console.log('Filtered data:', filteredData);
             
             // Check for any overlap between the selection and the cell positions for rows and columns
             const selectedRanges = count_data.filter(d => {
@@ -240,15 +266,6 @@ export const date_selection = {
                 return x0 <= xPosition + xWidth && xPosition <= x1;
             });
             
-            // Print selected data and their corresponding year ranges to the console
-            selectedRanges.forEach(range => {
-                // console.log(`Selected Year Range: ${range.range}`);
-                range.data.filter(md => selectedMonths.includes(md.month))
-                .forEach(data => {
-                    // console.log(`Month: ${data.month + 1}, Count: ${data.count}`);
-                });
-            });
-            
             // Update the cell colors based on selection
             rows.selectAll('.cell')
                 .style('fill', function (d) {
@@ -259,9 +276,11 @@ export const date_selection = {
         }
         
         function clearBrush() {
-            svg.select('.brush').call(brush.move, null);
-            }
+            g.select('.brush').call(brush.move, null);
+            g.selectAll('.cell').style('fill', (d) => colorScale(d.count)); // Reset all cells to their original color
+        }
 
+            
     },
     update(plots, data) {
         this.render(plots, data);
@@ -304,6 +323,17 @@ function selectData(earthquakeDataFeatures, startYear, endYear) {
         return year >= startYear && year <= endYear;
     });
     return selectedData;
+}
+
+
+function filterDataByYearAndMonths(data, selectedYearRanges, selectedMonths) {
+    return data.filter((feature) => {
+        const year = parseInt(feature.properties.Year);
+        const month = parseInt(feature.properties.Mo) - 1; // Adjust for zero-index month
+        const yearMatches = selectedYearRanges.some(range => year >= range.start && year <= range.end);
+        const monthMatches = selectedMonths.length === 0 || selectedMonths.includes(month);
+        return yearMatches && monthMatches;
+    });
 }
 
 function generateLegend(leftOffset, countExtent) {
