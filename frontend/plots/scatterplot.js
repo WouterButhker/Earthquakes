@@ -226,6 +226,9 @@ export const scatter_plot = {
                 const id_value = d.properties.Id;
                 return { x_value, y_value, id_value };
             });
+            if (highlight_points.length == 0) {
+                // TODO add message that there are no points to highlight due to missing data
+            }
         
             // Remove the undefined features that are undefined for the all the points
             // Filter the data such that the highlighted points are not in all the points

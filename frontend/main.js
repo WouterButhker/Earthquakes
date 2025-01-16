@@ -59,18 +59,19 @@ viewToggle.addEventListener('change', () => {
 
 d3.select('#pointOfInterest1').on('click', function () {
     // get the earthquake that has an id of "3227"
-    // TODO add text from website in placeholders
     const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '3227');
+
     plots['scatter_plot'].render(plots, [earthquakeData.features, interestPoint, 'Total Missing', 'Focal Depth (km)', tsunamiData.features]);
     plots['date_selection'].update(plots, interestPoint);
-    plots['detailed_view'].update(plots, [interestPoint[0], tsunamiData.features]);
+    plots['detailed_view'].update(plots, [interestPoint, tsunamiData.features]);
 });
 d3.select('#pointOfInterest2').on('click', function () {
     // get the earthquake that has an id of "7843"
     const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '7843');
+
     plots['scatter_plot'].render(plots, [earthquakeData.features, interestPoint, 'Total Houses Destroyed', 'Total Injuries', tsunamiData.features]);
     plots['date_selection'].update(plots, interestPoint);
-    plots['detailed_view'].update(plots, [interestPoint[0], tsunamiData.features]);
+    plots['detailed_view'].update(plots, [interestPoint, tsunamiData.features]);
 });
 
 addScatterplotAxisInteractions(plots, earthquakeData, tsunamiData);

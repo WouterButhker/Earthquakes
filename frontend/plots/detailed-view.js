@@ -13,13 +13,18 @@ export const detailed_view = {
 
         if (selectedDataPoint === undefined || selectedDataPoint.length === 0) {
             d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+            d3.select('#poi_text').text('[no earthquakes selected]');
             return
         }
         // if multiple earthquakes are selected, only show the first one
         if (selectedDataPoint.length > 1) {
             d3.select('#detailed_text').select('text').text('[multiple earthquakes selected]');
+            d3.select('#poi_text').text('[multiple earthquakes selected]');
             return
         }
+
+        // TODO add stuff of point of interest here
+        changePOI(selectedDataPoint[0]);
 
         const detailed_text = d3.select('#detailed_text').select('text');
 
@@ -43,6 +48,32 @@ export const detailed_view = {
         
     },
 };
+
+// Update Point of Interest text
+function changePOI(selectedDataPoint) {
+    const id = selectedDataPoint.properties.Id;
+    const poi_text = d3.select('#poi_text');
+
+    if (id === 3227) {
+        const weblink = "https://www.ngdc.noaa.gov/hazel/view/hazards/earthquake/event-more-info/3227";
+        const information = "There was a catastrophic earthquake in the Kanto region. The source of the earthquake, and the moderate tsunami which it generated, included Sagami Gulf and the Boso Peninsula, as well as adjacent areas of the sea and land, and apparently was oriented latitudinally. The assumed length of the source was 150-200 km.";
+        
+        const new_poi_text = '<a href="' + weblink + '" target="_blank">Link to official information</a><br>' + information;
+        poi_text.html(new_poi_text);
+    }
+    else if (id === 7843) {
+        const weblink = "https://www.ngdc.noaa.gov/hazel/view/hazards/earthquake/event-more-info/7843";
+        const information = "At least 69,185 people killed, 374,171 injured and 18,467 missing and presumed dead in the Chengdu-Lixian-Guangyuan area. More than 45.5 million people in 10 provinces and regions were affected. At least 15 million people were evacuated from their homes and more than 5 million were left homeless. An estimated 5.36 million buildings collapsed and more than 21 million buildings were damaged in Sichuan and in parts of Chongqing, Gansu, Hubei, Shaanxi and Yunnan.";
+    
+        const new_poi_text = '<a href="' + weblink + '" target="_blank">Link to official information</a><br>' + information;
+        poi_text.html(new_poi_text);
+    }
+    else {
+        poi_text.html('[no point of interest selected]');
+    }
+
+}
+
 
 function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
     const tsunamiID = selectedDataPoint.properties.Tsu;
