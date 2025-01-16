@@ -251,8 +251,8 @@ export const date_selection = {
             let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
             console.log('Filtered data:', filteredData);
 
-            // plots['geo-map'].update(plots, [filteredData, 'tectonicPlatesData', 'tsunamiDataFeatures']);
-            plots['scatter_plot'].update(plots, [filteredData, 'highlight', 'Mag', 'Focal Depth (km)']);
+            // plots['geo-map'].update(plots, [filteredData]);
+            // plots['scatter_plot'].update(plots, [filteredData]);
             
             // Check for any overlap between the selection and the cell positions for rows and columns
             const selectedRanges = count_data.filter(d => {
