@@ -133,6 +133,13 @@ select:disabled {
     gap: 10px;
 }
 
+#date-backButton {
+    width: 150px;
+    height: 25px;
+    padding: 5px;
+    font-size: 12px;
+}
+
 .plot-container {
     flex: 1;
     border: 1px solid #ddd;
@@ -142,7 +149,6 @@ select:disabled {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 55vh;
 }
 
 #map {
