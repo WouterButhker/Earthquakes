@@ -130,40 +130,37 @@ export const scatter_plot = {
             plots['date_selection'].update(plots, selectedDataFeatures);
             plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
         });
-        // Add click behavior to points
 
-        // from https://observablehq.com/@d3/brushable-scatterplot
         // Brushing behavior
+        // from https://observablehq.com/@d3/brushable-scatterplot
+        
+        // Flag to prevent recursion
+        let isClearingBrush = false;
         const brush = d3
             .brush()
             .filter((event) => event.ctrlKey)
-            .on('start brush end', ({ selection }) => {
-                let value = [];
+            .on('end', ({selection}) => {
+                if (isClearingBrush) return;
                 if (selection) {
                     const [[x0, y0], [x1, y1]] = selection;
-                    value = plotGroup
-                        .selectAll('circle')
-                        .style('fill', 'black')
-                        .filter(
-                            (d) =>
-                                x0 <= xScale(d.x_value) &&
-                                xScale(d.x_value) < x1 &&
-                                y0 <= yScale(d.y_value) &&
-                                yScale(d.y_value) < y1,
-                        )
-                        .style('fill', 'blue').attr('stroke', 'black')
-                        .data();
 
                     const selectedDataFeatures = allDataFeatures.filter(
                         (d) =>
-                            value.map((v) => v.x_value).includes(d.properties[xaxis_label]) &&
-                            value.map((v) => v.y_value).includes(d.properties[yaxis_label]),
+                            x0 <= xScale(d.properties[xaxis_label]) &&
+                            xScale(d.properties[xaxis_label]) < x1 &&
+                            y0 <= yScale(d.properties[yaxis_label]) &&
+                            yScale(d.properties[yaxis_label]) < y1,
                     );
                     plots['date_selection'].update(plots, selectedDataFeatures);
+                    plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
                     plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
-                } else {
-                    plotGroup.selectAll('circle').style('fill', 'black');
+
                 }
+                // Remove the brush after the selection
+                isClearingBrush = true;
+                plotGroup.call(brush.move, undefined);
+                isClearingBrush = false;
+                
             });
 
         plotGroup.call(brush);
@@ -194,7 +191,6 @@ export const scatter_plot = {
         // }        
     },
     update(plots, data) {
-        // this.render(plots, data);
         let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
 
         allDataFeatures = allDataFeatures.filter(
@@ -267,6 +263,7 @@ export const scatter_plot = {
                 .attr('cy', (d) => yScale(d.y_value))
                 .attr('r', 4)
                 .attr('fill', 'blue')
+                // .attr('stroke', 'black')
                 .raise();
 
         } else {

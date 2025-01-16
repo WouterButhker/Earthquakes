@@ -167,7 +167,7 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
             const selectedDataPoint = earthquakeData.features.filter(
                 (d) => d.properties.Id == selectedFeatures.getArray()[0].get('Id'),
             )[0];
-            plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+            plots['detailed_view'].update(plots, [[selectedDataPoint], tsunamiDataFeatures]);
             plots['date_selection'].update(plots, [selectedDataPoint]);
             plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
         }
