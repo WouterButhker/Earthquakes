@@ -84,27 +84,32 @@ export const date_selection = {
         if (yrRange > 500) {
             rangeSize = 500;
             backButton.disabled = true;
-        } else if (yrRange >= 100 && yrRange < 500) {
+            dataHistory = [data];
+        } else if (yrRange >= 100 && yrRange <= 500) {
             rangeSize = 100;
             backButton.disabled = false;
             lastStateData = dataHistory[0];
     
-        } else if (yrRange >= 10 && yrRange < 100) {
+        } else if (yrRange >= 10 && yrRange <= 100) {
             rangeSize = 10;
             backButton.disabled = false;
             lastStateData = dataHistory[1];
         
-        } else if (yrRange >= 0 && yrRange < 10) {
+        } else if (yrRange >= 0 && yrRange <= 10) {
             rangeSize = 1;
             backButton.disabled = false;
             lastStateData = dataHistory[2];
+            if (dataHistory.length == 3){
+                lastStateData = dataHistory[1];
+            }
         }
-        console.log(dataHistory);
         
         d3.select("#backButton").on("click", function() {
             dataHistory.pop();
             plots['date_selection'].update(plots, lastStateData);
         });
+
+
         // 
         // console.log(`Range size: ${rangeSize}`);
 
