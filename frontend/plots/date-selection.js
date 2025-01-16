@@ -11,8 +11,13 @@ const legendWidth = 200,
 // Offset for year label from the y-axis (avoid overlap with years)
 const yearLabelOffset = 25;
 
+let dataHistory = [];  // Initialize the data history stack
+
 export const date_selection = {
     render(plots, data) {
+
+        if (data) saveCurrentDataState(data);  // Save the current data state before any changes
+        // console.log(dataHistory);
         let earthquakeDataFeatures = data;
 
         // If width is not set, use the first client params for all next renders
@@ -67,11 +72,6 @@ export const date_selection = {
 
         // console.log(yearMonthData);
 
-        const all_years = yearMonthData.map((d) => d.year);
-
-        let uniqueYears = new Set(all_years);
-        let numUniqueYears = uniqueYears.size;
-
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
 
@@ -79,16 +79,33 @@ export const date_selection = {
         // console.log(`min and max years: ${minYear} - ${maxYear}`);
         // console.log(`Year range: ${yrRange}`);
 
+        let lastStateData = []; 
+
         if (yrRange > 500) {
             rangeSize = 500;
-        } else if (yrRange > 100 && yrRange <= 500) {
+            backButton.disabled = true;
+        } else if (yrRange >= 100 && yrRange < 500) {
             rangeSize = 100;
-        } else if (yrRange > 10 && yrRange <= 100) {
+            backButton.disabled = false;
+            lastStateData = dataHistory[0];
+    
+        } else if (yrRange >= 10 && yrRange < 100) {
             rangeSize = 10;
-        } else if (yrRange >= 0 && yrRange <= 10) {
+            backButton.disabled = false;
+            lastStateData = dataHistory[1];
+        
+        } else if (yrRange >= 0 && yrRange < 10) {
             rangeSize = 1;
+            backButton.disabled = false;
+            lastStateData = dataHistory[2];
         }
-
+        console.log(dataHistory);
+        
+        d3.select("#backButton").on("click", function() {
+            dataHistory.pop();
+            plots['date_selection'].update(plots, lastStateData);
+        });
+        // 
         // console.log(`Range size: ${rangeSize}`);
 
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
@@ -186,11 +203,75 @@ export const date_selection = {
             .attr('dy', -yearLabelOffset);
 
         generateLegend(margin.left + (width - legendWidth) / 2, countExtent);
+
+        const brush = d3.brush()
+            .extent([[0, 0], [width, height]])
+            .on('start brush end', brushed);
+
+        const brushG = g.append('g')
+            .attr('class', 'brush')
+            .call(brush);
+
+              
+        function brushed(event) {
+            const selection = event.selection;
+            if (!selection) {
+                console.log('No selection');
+                return;
+            }
+            
+            const [[x0, y0], [x1, y1]] = selection;
+            
+            // Check for any overlap between the selection and the cell positions for rows and columns
+            const selectedRanges = count_data.filter(d => {
+                const yPosition = yScale(d.range);
+                const yHeight = yScale.bandwidth();
+                // Check if there's any overlap in the Y-axis
+                return y0 <= yPosition + yHeight && yPosition <= y1;
+            });
+            
+            const selectedMonths = d3.range(0, 12).filter(month => {
+                const xPosition = xScale(month);
+                const xWidth = xScale.bandwidth();
+                // Check if there's any overlap in the X-axis
+                return x0 <= xPosition + xWidth && xPosition <= x1;
+            });
+            
+            // Print selected data and their corresponding year ranges to the console
+            selectedRanges.forEach(range => {
+                // console.log(`Selected Year Range: ${range.range}`);
+                range.data.filter(md => selectedMonths.includes(md.month))
+                .forEach(data => {
+                    // console.log(`Month: ${data.month + 1}, Count: ${data.count}`);
+                });
+            });
+            
+            // Update the cell colors based on selection
+            rows.selectAll('.cell')
+                .style('fill', function (d) {
+                    const isInRange = selectedRanges.some(range => range.range === this.parentNode.__data__.range);
+                    const isMonthSelected = selectedMonths.includes(d.month);
+                    return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
+                });
+        }
+        
+        function clearBrush() {
+            svg.select('.brush').call(brush.move, null);
+            }
+
     },
     update(plots, data) {
         this.render(plots, data);
     },
 };
+
+function saveCurrentDataState(data) {
+    const dataString = JSON.stringify(data);
+    if (!dataHistory.some(history => JSON.stringify(history) === dataString)) {
+        dataHistory.push(JSON.parse(dataString));  // Deep copy to preserve data integrity
+    }
+}
+
 
 function aggregateDataByYearRange(yearMonthData, startYear, endYear) {
     const filteredData = yearMonthData.filter((d) => d.year >= startYear && d.year <= endYear);
