@@ -126,9 +126,19 @@ export const scatter_plot = {
                     d.properties[xaxis_label] === chosenEvent.srcElement.__data__.x_value &&
                     d.properties[yaxis_label] === chosenEvent.srcElement.__data__.y_value,
             );
-            plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-            plots['date_selection'].update(plots, selectedDataFeatures);
-            plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
+
+            if (selectedDataFeatures.length !== 0) {
+                plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['date_selection'].update(plots, selectedDataFeatures);
+                plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
+                plots['geo_map'].update(plots, [selectedDataFeatures]);
+            }
+            else {
+                plots['scatter_plot'].update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['date_selection'].update(plots, allDataFeatures);
+                plots['detailed_view'].update(plots, [allDataFeatures, tsunamiDataFeatures]);
+                plots['geo_map'].update(plots, [allDataFeatures]);
+            }
         });
 
         // Brushing behavior
