@@ -144,9 +144,11 @@ export const geo_map = {
             featureProjection: 'EPSG:3857',
         });
 
-        const source = earthquakesLayer.getSource();
-        source.clear();
-        source.addFeatures(selectedFeatures);
+        for (let layer of [earthquakesLayer, heatmapLayer]) {
+            const source = layer.getSource();
+            source.clear();
+            source.addFeatures(selectedFeatures);
+        }
     },
 };
 
