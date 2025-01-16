@@ -194,8 +194,6 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
             plots['date_selection'].update(plots, [selectedDataPoint]);
             plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
         } else {
-            // TODO check if this is correct
-            console.log("No selected features");
             plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
             plots['date_selection'].update(plots, earthquakeData.features);
             plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
@@ -272,7 +270,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         // get the value of the selectButtonXaxis and selectButtonYaxis
         const xaxis_label = d3.select('#selectButtonXaxis').property('value');
         const yaxis_label = d3.select('#selectButtonYaxis').property('value');
-        // filter the earthquake data to only include earthquakes with the same magnitude as the selected points
+        // filter the earthquake data to only include earthquakes with the same x and y as the selected points
         const selectedData = earthquakeData.features.filter(
             (d) =>
                 selectedFeatures
