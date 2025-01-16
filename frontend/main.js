@@ -36,7 +36,6 @@ d3.select('#resetButton').on('click', function () {
 
 // Toggle between heatmap and points
 const viewToggle = document.getElementById('viewToggle');
-const viewToggleText = document.getElementById('viewToggleText');
 const sizeDropdown = document.getElementById('size');
 const colorDropdown = document.getElementById('color');
 
@@ -50,7 +49,6 @@ viewToggle.addEventListener('change', () => {
     const isHeatmapMode = viewToggle.checked;
     sizeDropdown.disabled = isHeatmapMode;
     colorDropdown.disabled = isHeatmapMode;
-    viewToggleText.innerHTML = viewToggle.checked ? 'Heatmap' : '&nbsp;&nbsp;Dotted&nbsp;&nbsp;';
 });
 
 /* ========================================================================== */
