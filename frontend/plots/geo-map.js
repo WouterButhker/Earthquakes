@@ -135,16 +135,16 @@ export const geo_map = {
             geojson = allEarthquakeData;
         } else {
             geojson = {
-                "type": "FeatureCollection",
-                "features": earthquakeDataFeatures
+                type: 'FeatureCollection',
+                features: earthquakeDataFeatures,
             };
         }
         const selectedFeatures = new GeoJSON().readFeatures(geojson, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
-        })
+        });
 
-        const source = earthquakesLayer.getSource()
+        const source = earthquakesLayer.getSource();
         source.clear();
         source.addFeatures(selectedFeatures);
     },
@@ -181,22 +181,36 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 
     select.on('select', function () {
         const selectedFeatures = select.getFeatures();
-        const selectedFeaturesArr = selectedFeatures.getArray().filter(feature => feature.getGeometry().getType() === 'Point');
+        const selectedFeaturesArr = selectedFeatures
+            .getArray()
+            .filter((feature) => feature.getGeometry().getType() === 'Point');
         // get the value of the selectButtonXaxis and selectButtonYaxis
         const xaxis_label = d3.select('#selectButtonXaxis').property('value');
         const yaxis_label = d3.select('#selectButtonYaxis').property('value');
-        if (selectedFeaturesArr.length !== 0) {            
+        if (selectedFeaturesArr.length !== 0) {
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
             const selectedDataPoint = earthquakeData.features.filter(
                 (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [[selectedDataPoint], tsunamiDataFeatures]);
             plots['date_selection'].update(plots, [selectedDataPoint]);
-            plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            plots['scatter_plot'].update(plots, [
+                earthquakeData.features,
+                [selectedDataPoint],
+                xaxis_label,
+                yaxis_label,
+                tsunamiDataFeatures,
+            ]);
         } else {
             plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
             plots['date_selection'].update(plots, earthquakeData.features);
-            plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            plots['scatter_plot'].update(plots, [
+                earthquakeData.features,
+                undefined,
+                xaxis_label,
+                yaxis_label,
+                tsunamiDataFeatures,
+            ]);
         }
     });
 
@@ -283,7 +297,13 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
                     .includes(d.properties[yaxis_label]),
         );
 
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+        plots['scatter_plot'].update(plots, [
+            earthquakeData.features,
+            selectedData,
+            xaxis_label,
+            yaxis_label,
+            tsunamiDataFeatures,
+        ]);
         plots['date_selection'].update(plots, selectedData);
         plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
     });

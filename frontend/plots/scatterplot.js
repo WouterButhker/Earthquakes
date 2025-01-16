@@ -55,9 +55,19 @@ export const scatter_plot = {
             xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
         }
 
-        var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+        var yScale = d3
+            .scaleLinear()
+            .domain([0, yExtent[1]])
+            .nice()
+            .range([height, 0])
+            .unknown(height - margin.bottom);
         if (yExtent[1] > 1000) {
-            yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            yScale = d3
+                .scaleSymlog()
+                .domain([0.1, yExtent[1]])
+                .nice()
+                .range([height, 0])
+                .unknown(height - margin.bottom);
         }
 
         // Add axes
@@ -83,7 +93,8 @@ export const scatter_plot = {
         if (xExtent[1] > 1000) {
             plotGroup.selectAll('.x-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
             // only keep first, second, fourth and last tick label
-            plotGroup.selectAll('.x-axis .tick text')
+            plotGroup
+                .selectAll('.x-axis .tick text')
                 .filter((d, i, nodes) => {
                     const totalTicks = nodes.length;
                     return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
@@ -94,12 +105,13 @@ export const scatter_plot = {
         if (yExtent[1] > 1000) {
             plotGroup.selectAll('.y-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
             // only keep first, second, fourth and last tick label
-            plotGroup.selectAll('.y-axis .tick text')
-            .filter((d, i, nodes) => {
-                const totalTicks = nodes.length;
-                return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
-            })
-            .remove();
+            plotGroup
+                .selectAll('.y-axis .tick text')
+                .filter((d, i, nodes) => {
+                    const totalTicks = nodes.length;
+                    return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
+                })
+                .remove();
         }
 
         plotGroup
@@ -112,7 +124,7 @@ export const scatter_plot = {
             .style('font-size', '12px')
             .style('fill', 'black')
             .text(yaxis_label);
-        
+
         // Clicking behavior
         plotGroup.on('click', function (chosenEvent) {
             // check if an element is selected
@@ -128,13 +140,24 @@ export const scatter_plot = {
             );
 
             if (selectedDataFeatures.length !== 0) {
-                plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    selectedDataFeatures,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
                 plots['date_selection'].update(plots, selectedDataFeatures);
                 plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [selectedDataFeatures]);
-            }
-            else {
-                plots['scatter_plot'].update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            } else {
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    undefined,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
                 plots['date_selection'].update(plots, allDataFeatures);
                 plots['detailed_view'].update(plots, [allDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [allDataFeatures]);
@@ -143,13 +166,13 @@ export const scatter_plot = {
 
         // Brushing behavior
         // from https://observablehq.com/@d3/brushable-scatterplot
-        
+
         // Flag to prevent recursion
         let isClearingBrush = false;
         const brush = d3
             .brush()
             .filter((event) => event.ctrlKey)
-            .on('end', ({selection}) => {
+            .on('end', ({ selection }) => {
                 if (isClearingBrush) return;
                 if (selection) {
                     const [[x0, y0], [x1, y1]] = selection;
@@ -162,24 +185,27 @@ export const scatter_plot = {
                             yScale(d.properties[yaxis_label]) < y1,
                     );
                     plots['date_selection'].update(plots, selectedDataFeatures);
-                    plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                    plots['scatter_plot'].update(plots, [
+                        allDataFeatures,
+                        selectedDataFeatures,
+                        xaxis_label,
+                        yaxis_label,
+                        tsunamiDataFeatures,
+                    ]);
                     plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                     plots['geo_map'].update(plots, [selectedDataFeatures]);
-
                 }
                 // Remove the brush after the selection
                 isClearingBrush = true;
                 plotGroup.call(brush.move, undefined);
                 isClearingBrush = false;
-                
             });
 
         plotGroup.call(brush);
 
         if (pointsToHighlight === undefined) {
             this.update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label]);
-        }
-        else {
+        } else {
             this.update(plots, [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label]);
         }
 
@@ -199,7 +225,7 @@ export const scatter_plot = {
         //     dot.attr("transform", transform).attr("stroke-width", 5 / transform.k);
         //     gx.call(xAxis, zx);
         //     gy.call(yAxis, zy);
-        // }        
+        // }
     },
     update(plots, data) {
         let [allDataFeatures, pointsToHighlight, xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
@@ -220,11 +246,20 @@ export const scatter_plot = {
             xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
         }
 
-        var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+        var yScale = d3
+            .scaleLinear()
+            .domain([0, yExtent[1]])
+            .nice()
+            .range([height, 0])
+            .unknown(height - margin.bottom);
         if (yExtent[1] > 1000) {
-            yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            yScale = d3
+                .scaleSymlog()
+                .domain([0.1, yExtent[1]])
+                .nice()
+                .range([height, 0])
+                .unknown(height - margin.bottom);
         }
-
 
         // Remove the undefined features that are undefined for the chosen highlighted points
         if (pointsToHighlight !== undefined) {
@@ -239,12 +274,11 @@ export const scatter_plot = {
             });
             // Message that there are no points to highlight due to missing data
             if (highlight_points.length == 0) {
-                d3.select('#scatterplot_message').html("Earthquake is not highlighted due to missing data.");
+                d3.select('#scatterplot_message').html('Earthquake is not highlighted due to missing data.');
+            } else {
+                d3.select('#scatterplot_message').html('');
             }
-            else  {
-                d3.select('#scatterplot_message').html("");
-            }
-        
+
             // Remove the undefined features that are undefined for the all the points
             // Filter the data such that the highlighted points are not in all the points
             const allDataFeatures_without_highlight = allDataFeatures.filter(
@@ -283,7 +317,6 @@ export const scatter_plot = {
                 .attr('fill', 'blue')
                 .attr('stroke', 'black')
                 .raise();
-
         } else {
             const plotGroup = svg.select('g');
 
@@ -296,7 +329,6 @@ export const scatter_plot = {
                 .attr('r', 4)
                 .attr('fill', 'black');
         }
-        
     },
 };
 
@@ -354,12 +386,16 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
         const highlighted_ids = new Set(highlight_points.map((d) => d.id_value));
 
         // Get all the points from the ids of the highlighted points
-        const highlightedDatePoints = earthquakeData.features.filter(
-            (d) => highlighted_ids.has(d.properties.Id),
-        );
+        const highlightedDatePoints = earthquakeData.features.filter((d) => highlighted_ids.has(d.properties.Id));
 
         // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        plots['scatter_plot'].render(plots, [
+            earthquakeData.features,
+            highlightedDatePoints,
+            newX_label,
+            newY_label,
+            tsunamiData.features,
+        ]);
     });
 
     d3.select('#selectButtonYaxis').on('change', function (d) {
@@ -372,11 +408,15 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
         const highlighted_ids = new Set(highlight_points.map((d) => d.id_value));
 
         // Get all the points from the ids of the highlighted points
-        const highlightedDatePoints = earthquakeData.features.filter(
-            (d) => highlighted_ids.has(d.properties.Id),
-        );
+        const highlightedDatePoints = earthquakeData.features.filter((d) => highlighted_ids.has(d.properties.Id));
 
         // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        plots['scatter_plot'].render(plots, [
+            earthquakeData.features,
+            highlightedDatePoints,
+            newX_label,
+            newY_label,
+            tsunamiData.features,
+        ]);
     });
 }
