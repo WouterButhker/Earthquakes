@@ -32,6 +32,7 @@ d3.select('#resetButton').on('click', function () {
     plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, 'Mag', 'Focal Depth (km)', tsunamiData.features]);
     plots['date_selection'].update(plots, earthquakeData.features);
     plots['detailed_view'].update(plots, [undefined, undefined]);
+    plots['geo_map'].update(plots, [[]]);
 });
 
 // Toggle between heatmap and points
