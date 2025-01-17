@@ -224,6 +224,12 @@ svg {
     margin-bottom: 12px;
 }
 
+.vl {
+    border-left: 1px solid black;
+    height: 100%;
+    padding: 0 20px 0 10px;
+}
+
 #legend .legend-section:last-child {
     margin-bottom: 0;
 }

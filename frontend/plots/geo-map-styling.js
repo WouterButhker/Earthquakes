@@ -192,6 +192,8 @@ export function updateLegend(currentColor, currentSize) {
         html += `</div>`;
     }
 
+    if (currentColor !== 'Country') html += "<div class='vl'></div>";
+
     // 2) Show a size legend for the currently selected size property
     if (sizeSamples[currentSize]) {
         html += `<div class="legend-section">
