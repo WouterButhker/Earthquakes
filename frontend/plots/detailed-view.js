@@ -1,10 +1,17 @@
 import * as d3 from 'd3';
 
+let descriptionMapping = null;
+
 export const detailed_view = {
-    render(plots, descriptionMapping) {
+    render(plots, cmap) {
         const detailed_text = d3.select('#detailed_text').append('text');
         detailed_text.text('[no earthquake selected]');
-        // this.descriptionMapping = descriptionMapping; // Store the mapping
+        console.log(cmap);
+        // Store description mapping from legend colormap
+        descriptionMapping = new Map();
+        for (const [key, value] of Object.entries(cmap)) {
+            descriptionMapping.set(key, value.map(d => d.label));
+        }
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
@@ -58,44 +65,44 @@ function changePOI(selectedDataPoint) {
     }
 }
 
-function generateDetails(selectedDataPoint, tsunamiDataFeatures, descriptionMapping) {
+function generateDetails(selectedDataPoint, tsunamiDataFeatures) {
     const listofProperties = Object.keys(selectedDataPoint.properties);
     const fieldMap = new Map();
 
     // Handle paired fields and descriptions
     const processedFields = new Set();
     listofProperties.forEach((field) => {
-        if (processedFields.has(field)) return;
         // Handle description fields
-        if (field.endsWith(' Description')) {
-            const baseField = field.replace(' Description', '');
-            if (listofProperties.includes(baseField)) {
-                const value = selectedDataPoint.properties[baseField];
-                fieldMap.set(baseField, value); // Add to the map
-            } else {
-                const descValue = selectedDataPoint.properties[field];
-                // const mappedValue = descriptionMapping[descValue] || descValue;
-                const mappedValue = descValue;
-                fieldMap.set(baseField, mappedValue); // Add to the map
-            }
-            processedFields.add(baseField);
-            processedFields.add(field);
+        // if (field.endsWith(' Description')) {
+        //     const baseField = field.replace(' Description', '');
+        //     if (listofProperties.includes(baseField)) {
+        //         const value = selectedDataPoint.properties[baseField];
+        //         fieldMap.set(baseField, value); // Add to the map
+        //     } else {
+        //         const descValue = selectedDataPoint.properties[field];
+        //         const mappedValue = descValue;
+        //         // const mappedValue = descriptionMapping.get(baseField)[descValue] || descValue;
+        //         fieldMap.set(baseField, mappedValue); // Add to the map
+        //     }
+        //     processedFields.add(baseField);
+        //     processedFields.add(field);
         // Handle regular fields
-        } else if (!processedFields.has(field)) {
-            const value = selectedDataPoint.properties[field];
-            fieldMap.set(field, value); // Add to the map
-            processedFields.add(field);
-        }
+        // } else if (!processedFields.has(field)) {
+
+
+
+        const value = selectedDataPoint.properties[field];
+        fieldMap.set(field, value);
+        processedFields.add(field);
     });
 
     // Format time field
     const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
     const timeParts = timeFields.map((field) => selectedDataPoint.properties[field]).filter((part) => part !== undefined);
-
     if (timeParts.length > 0) {
         const [year, month, day, hour, minute, second] = timeParts;
         const formattedTime = formatDateTime(year, month, day, hour, minute, second);
-        fieldMap.set('Time', formattedTime); // Add formatted time to the map
+        fieldMap.set('Time', formattedTime);
     }
 
     // Add related tsunami information
@@ -139,19 +146,19 @@ function formatDateTime(year, month, day, hour, minute, second) {
         'December',
     ];
 
-    const monthName = month ? months[month - 1] : '';
+    const monthName = month ? months[month - 1] : '-';
     const dateParts = [
         monthName,
         ' ',
-        day ? day.toString().padStart(2, '0') : '',
+        day ? day.toString().padStart(2, '0') : '-',
         ', ',
-        year || '',
+        year || '-',
         ' ',
-        hour !== undefined ? hour.toString().padStart(2, '0') : '',
+        hour !== undefined ? hour.toString().padStart(2, '0') : '-',
         ':',
-        minute !== undefined ? minute.toString().padStart(2, '0') : '',
+        minute !== undefined ? minute.toString().padStart(2, '0') : '-',
         ':',
-        second !== undefined ? second.toString().padStart(2, '0') : '',
+        second !== undefined ? second.toString().padStart(2, '0') : '-',
     ].filter(Boolean);
 
     return dateParts.length > 0 ? dateParts.join('') : 'Unknown time';

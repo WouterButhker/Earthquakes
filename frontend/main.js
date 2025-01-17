@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { earthquakesLayer, heatmapLayer, geo_map } from './plots/geo-map';
+import { earthquakesLayer, heatmapLayer, geo_map, cmap } from './plots/geo-map';
 import { scatter_plot, addScatterplotAxisInteractions } from './plots/scatterplot';
 import { date_selection } from './plots/date-selection';
 import { detailed_view } from './plots/detailed-view';
@@ -27,7 +27,7 @@ plots['scatter_plot'].render(plots, [
     tsunamiData.features,
 ]);
 plots['date_selection'].render(plots, earthquakeData.features);
-plots['detailed_view'].render(plots, undefined);
+plots['detailed_view'].render(plots, cmap);
 
 /* ========================================================================== */
 /* ======================== Top-view interactions =========================== */

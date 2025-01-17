@@ -14,10 +14,12 @@ import * as olProj from 'ol/proj';
 import { platformModifierKeyOnly, click } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from 'd3';
-import { getStyle, updateLegend } from './geo-map-styling';
+import { getStyle, updateLegend, colorMapping } from './geo-map-styling';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
+export let cmap = colorMapping;
+
 let allEarthquakeData = null;
 
 // Default OSM layer

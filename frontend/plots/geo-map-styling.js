@@ -78,7 +78,7 @@ export function getStyle(feature, colorProperty, sizeProperty) {
     });
 }
 
-const colorMapping = {
+export const colorMapping = {
     Tsu: [
         { label: 'No Tsunami', color: '#888888' },
         { label: 'Tsunami', color: 'rgba(0, 0, 255, 0.7)' },
