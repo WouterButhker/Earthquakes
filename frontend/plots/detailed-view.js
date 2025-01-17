@@ -6,7 +6,6 @@ export const detailed_view = {
     render(plots, cmap) {
         const detailed_text = d3.select('#detailed_text').append('text');
         detailed_text.text('[no earthquake selected]');
-        console.log(cmap);
         // Store description mapping from legend colormap
         descriptionMapping = new Map();
         for (const [key, value] of Object.entries(cmap)) {

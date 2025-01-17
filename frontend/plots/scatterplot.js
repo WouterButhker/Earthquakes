@@ -345,7 +345,7 @@ const scatterplot_yaxis_options = [
 ];
 // prettier-ignore
 const scatterplot_categorical_options = [
-    'Country', 'MMI Int', 'Total Death Description', 'Total Missing Description', 'Total Injuries Description',
+    'Country', 'MMI Int', 'Total Deaths Description', 'Total Missing Description', 'Total Injuries Description',
     'Total Damage Description', 'Total Houses Destroyed Description', 'Total Houses Damaged Description',
 ];
 

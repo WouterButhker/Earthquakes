@@ -33,7 +33,7 @@ export function getStyle(feature, colorProperty, sizeProperty) {
         Tsu: (value) => (value ? 'rgba(0, 0, 255, 0.7)' : '#888888'),
         Mag: (value) => (value ? `rgba(255, ${255 - value * 25}, 0, 0.7)` : '#888888'),
         'MMI Int': (value) => (value ? `rgba(255, ${255 - value * 20}, ${value * 20}, 0.7)` : '#888888'),
-        'Total Death Description': (value) =>
+        'Total Deaths Description': (value) =>
             value ? ['#88cc88', '#ffcc00', '#ff9933', '#ff6666', '#cc0000'][value] : '#888888',
         'Total Injuries Description': (value) =>
             value ? ['#88cc88', '#ffcc00', '#ff9933', '#ff6666', '#cc0000'][value] : '#888888',
@@ -99,7 +99,15 @@ export const colorMapping = {
         { label: 'Intensity 9+', color: `rgba(255, ${255 - 9 * 20}, ${9 * 20}, 0.7)` },
         { label: 'Unknown', color: '#888888' },
     ],
-    'Total Death Description': [
+    'Total Deaths Description': [
+        { label: 'None', color: '#88cc88' },
+        { label: 'Few (~1 to 50 deaths)', color: '#ffcc00' },
+        { label: 'Some (~51 to 100 deaths)', color: '#ff9933' },
+        { label: 'Many (~101 to 1000 deaths)', color: '#ff6666' },
+        { label: 'Very many (over 1000 deaths)', color: '#cc0000' },
+        { label: 'Unknown', color: '#888888' },
+    ],
+    'Total Missing Description': [
         { label: 'None', color: '#88cc88' },
         { label: 'Few (~1 to 50 deaths)', color: '#ffcc00' },
         { label: 'Some (~51 to 100 deaths)', color: '#ff9933' },
