@@ -252,12 +252,13 @@ export const date_selection = {
             let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
             // console.log('Filtered data:', filteredData);
 
-
             if (filteredData.length > 0) {
-                // Make sure to pass the current axis labels or any other required configuration.
+                const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+                const yaxis_label = d3.select('#selectButtonYaxis').property('value');
                 plots['geo_map'].update(plots, [filteredData]);
                 console.log([filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, 'Mag', 'Focal Depth (km)']);
+                // Update scatter plot with filtered data and current axis labels
+                plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, xaxis_label, yaxis_label]);
             }
 
             // Check for any overlap between the selection and the cell positions for rows and columns
