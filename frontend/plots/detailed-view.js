@@ -67,9 +67,25 @@ function generateDetails(selectedDataPoint, tsunamiDataFeatures, descriptionMapp
     listofProperties.forEach((field) => {
         if (processedFields.has(field)) return;
         // Handle description fields
+        if (field.endsWith(' Description')) {
+            const baseField = field.replace(' Description', '');
+            if (listofProperties.includes(baseField)) {
+                const value = selectedDataPoint.properties[baseField];
+                fieldMap.set(baseField, value); // Add to the map
+            } else {
+                const descValue = selectedDataPoint.properties[field];
+                // const mappedValue = descriptionMapping[descValue] || descValue;
+                const mappedValue = descValue;
+                fieldMap.set(baseField, mappedValue); // Add to the map
+            }
+            processedFields.add(baseField);
+            processedFields.add(field);
+        // Handle regular fields
+        } else if (!processedFields.has(field)) {
             const value = selectedDataPoint.properties[field];
             fieldMap.set(field, value); // Add to the map
             processedFields.add(field);
+        }
     });
 
     // Format time field
