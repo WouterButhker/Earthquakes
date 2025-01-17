@@ -19,6 +19,8 @@ export const date_selection = {
         if (data) saveCurrentDataState(data);  // Save the current data state before any changes
         // console.log(dataHistory);
         let earthquakeDataFeatures = data;
+        let [xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
+
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -209,7 +211,7 @@ export const date_selection = {
 
         const brush = d3.brush()
             .extent([[0, 0], [width, height]])
-            .on('start brush end', brushed);
+            .on('end', brushed);
 
         const brushG = g.append('g')
             .attr('class', 'brush')
@@ -219,7 +221,6 @@ export const date_selection = {
             const selection = event.selection;
             if (!selection) {
                 console.log('No selection');
-                clearBrush(); // Clear visual selection when the brush is cleared
                 return;
             }
             
@@ -249,11 +250,16 @@ export const date_selection = {
 
             // Filter the data based on the selected year ranges and months
             let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
-            console.log('Filtered data:', filteredData);
+            // console.log('Filtered data:', filteredData);
 
-            // plots['geo-map'].update(plots, [filteredData]);
-            // plots['scatter_plot'].update(plots, [filteredData]);
-            
+
+            if (filteredData.length > 0) {
+                // Make sure to pass the current axis labels or any other required configuration.
+                plots['geo_map'].update(plots, [filteredData]);
+                console.log([filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, 'Mag', 'Focal Depth (km)']);
+            }
+
             // Check for any overlap between the selection and the cell positions for rows and columns
             const selectedRanges = count_data.filter(d => {
                 const yPosition = yScale(d.range);
@@ -276,11 +282,9 @@ export const date_selection = {
                     const isMonthSelected = selectedMonths.includes(d.month);
                     return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
                 });
-        }
-        
-        function clearBrush() {
-            g.select('.brush').call(brush.move, null);
-            g.selectAll('.cell').style('fill', (d) => colorScale(d.count)); // Reset all cells to their original color
+
+            // Clear the brush after selection
+            brushG.call(brush.move, null);
         }
 
             
