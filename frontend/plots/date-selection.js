@@ -17,10 +17,8 @@ export const date_selection = {
     render(plots, data) {
 
         if (data) saveCurrentDataState(data);  // Save the current data state before any changes
-        // console.log(dataHistory);
-        let earthquakeDataFeatures = data;
-        let [xaxis_label, yaxis_label, tsunamiDataFeatures] = data;
 
+        let earthquakeDataFeatures = data;
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -69,14 +67,8 @@ export const date_selection = {
             }
         }
 
-        // console.log(yearMonthData);
-
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
-
-        // console.log(`unique years: ${numUniqueYears}`);
-        // console.log(`min and max years: ${minYear} - ${maxYear}`);
-        // console.log(`Year range: ${yrRange}`);
 
         let lastStateData = []; 
 
@@ -108,10 +100,6 @@ export const date_selection = {
             plots['date_selection'].update(plots, lastStateData);
         });
 
-
-        // 
-        // console.log(`Range size: ${rangeSize}`);
-
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
         // Iterate over each year range and store results
@@ -119,8 +107,6 @@ export const date_selection = {
             range: range.start === range.end ? `${range.start}` : `${range.start}-${range.end}`,
             data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
-
-        // console.log(count_data);
 
         // Create scales
         const xScale = d3
@@ -177,7 +163,6 @@ export const date_selection = {
                 const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
-                // console.log(startYear, endYear);
                 let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
 
                 // Prevent rendering if no data is found
@@ -250,14 +235,12 @@ export const date_selection = {
 
             // Filter the data based on the selected year ranges and months
             let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
-            // console.log('Filtered data:', filteredData);
 
             if (filteredData.length > 0) {
                 const xaxis_label = d3.select('#selectButtonXaxis').property('value');
                 const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+                // Update map and scatterplot with filtered data
                 plots['geo_map'].update(plots, [filteredData]);
-                console.log([filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                // Update scatter plot with filtered data and current axis labels
                 plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, xaxis_label, yaxis_label]);
             }
 
