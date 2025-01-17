@@ -129,13 +129,13 @@ export const scatter_plot = {
 
             if (selectedDataFeatures.length !== 0) {
                 plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                plots['date_selection'].update(plots, selectedDataFeatures);
+                plots['date_selection'].update(plots, [allDataFeatures, selectedDataFeatures, tsunamiDataFeatures]);
                 plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [selectedDataFeatures]);
             }
             else {
                 plots['scatter_plot'].update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                plots['date_selection'].update(plots, allDataFeatures);
+                plots['date_selection'].update(plots, [allDataFeatures, allDataFeatures, tsunamiDataFeatures]);
                 plots['detailed_view'].update(plots, [allDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [allDataFeatures]);
             }
@@ -161,7 +161,7 @@ export const scatter_plot = {
                             y0 <= yScale(d.properties[yaxis_label]) &&
                             yScale(d.properties[yaxis_label]) < y1,
                     );
-                    plots['date_selection'].update(plots, selectedDataFeatures);
+                    plots['date_selection'].update(plots, [allDataFeatures, selectedDataFeatures, tsunamiDataFeatures]);
                     plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
                     plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                     plots['geo_map'].update(plots, [selectedDataFeatures]);
@@ -239,7 +239,7 @@ export const scatter_plot = {
             });
             // Message that there are no points to highlight due to missing data
             if (highlight_points.length == 0) {
-                d3.select('#scatterplot_message').html("Earthquake is not highlighted due to missing data.");
+                d3.select('#scatterplot_message').html("No earthquake is highlighted due to missing data.");
             }
             else  {
                 d3.select('#scatterplot_message').html("");
@@ -259,6 +259,9 @@ export const scatter_plot = {
 
             const plotGroup = svg.select('g');
 
+            // Remove all the points
+            plotGroup.selectAll('circle').remove();
+
             // Plot the points as circles where all_points_without_highlighted are black and highlight_points are blue
             // Add black points
             plotGroup
@@ -269,7 +272,8 @@ export const scatter_plot = {
                 .attr('cx', (d) => xScale(d.x_value))
                 .attr('cy', (d) => yScale(d.y_value))
                 .attr('r', 4)
-                .attr('fill', 'black');
+                .attr('fill', 'black')
+                .attr('opacity', 0.3);
 
             // Add highlighted points
             plotGroup
@@ -294,7 +298,8 @@ export const scatter_plot = {
                 .attr('cx', (d) => xScale(d.x_value))
                 .attr('cy', (d) => yScale(d.y_value))
                 .attr('r', 4)
-                .attr('fill', 'black');
+                .attr('fill', 'black')
+                .attr('opacity', 0.3);
         }
         
     },
@@ -358,8 +363,15 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
             (d) => highlighted_ids.has(d.properties.Id),
         );
 
-        // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        // If no points are highlighted
+        if (highlightedDatePoints.length === 0) {
+            plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
+            return;
+        }
+        else{
+            // Render the new scatterplot
+            plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        }
     });
 
     d3.select('#selectButtonYaxis').on('change', function (d) {
@@ -376,7 +388,15 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
             (d) => highlighted_ids.has(d.properties.Id),
         );
 
-        // Render the new scatterplot
-        plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        // If no points are highlighted
+        if (highlightedDatePoints.length === 0) {
+            plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
+            return;
+        }
+        else{
+            // Render the new scatterplot
+            plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+        }
+
     });
 }

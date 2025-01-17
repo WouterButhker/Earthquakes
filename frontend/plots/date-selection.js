@@ -18,7 +18,7 @@ export const date_selection = {
 
         if (data) saveCurrentDataState(data);  // Save the current data state before any changes
 
-        let earthquakeDataFeatures = data;
+        let [allDataFeatures, pointsToFilter, tsunamiDataFeatures] = data;
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -33,7 +33,7 @@ export const date_selection = {
         const g = svg.append('g').attr('transform', `translate(${margin.left + yearLabelOffset},${margin.top})`);
 
         const counts = d3.rollup(
-            earthquakeDataFeatures,
+            pointsToFilter,
             (v) => v.length, // Counting occurrences
             (d) => parseInt(d.properties.Year),
             (d) => {
@@ -43,11 +43,11 @@ export const date_selection = {
         );
 
         // Find the range of years in the dataset
-        const minYear = d3.min(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
-        const maxYear = d3.max(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
+        const minYear = d3.min(pointsToFilter, (d) => parseInt(d.properties.Year));
+        const maxYear = d3.max(pointsToFilter, (d) => parseInt(d.properties.Year));
 
         // Determine the range of years in the dataset
-        const yearExtent = d3.extent(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
+        const yearExtent = d3.extent(pointsToFilter, (d) => parseInt(d.properties.Year));
 
         // Generate full year and month data
         let yearMonthData = [];
@@ -97,7 +97,7 @@ export const date_selection = {
         
         d3.select("#backButton").on("click", function() {
             dataHistory.pop();
-            plots['date_selection'].update(plots, lastStateData);
+            plots['date_selection'].update(plots, [allDataFeatures, lastStateData, tsunamiDataFeatures]);
         });
 
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
@@ -163,14 +163,14 @@ export const date_selection = {
                 const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
-                let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
+                let selectedData = selectData(pointsToFilter, startYear, endYear);
 
                 // Prevent rendering if no data is found
                 if (selectedData.length === 0) {
                     console.log('No data found for selected year range');
                     return;
                 }
-                plots['date_selection'].update(plots, selectedData);
+                plots['date_selection'].update(plots, [allDataFeatures, selectedData, tsunamiDataFeatures]);
             });
 
         // Add month label
@@ -196,7 +196,7 @@ export const date_selection = {
 
         const brush = d3.brush()
             .extent([[0, 0], [width, height]])
-            .on('end', brushed);
+            .on('start brush end', brushed);
 
         const brushG = g.append('g')
             .attr('class', 'brush')
@@ -234,14 +234,15 @@ export const date_selection = {
             });
 
             // Filter the data based on the selected year ranges and months
-            let filteredData = filterDataByYearAndMonths(earthquakeDataFeatures, selectedYearRanges, selectedMonthRanges);
+            let filteredData = filterDataByYearAndMonths(pointsToFilter, selectedYearRanges, selectedMonthRanges);
 
             if (filteredData.length > 0) {
                 const xaxis_label = d3.select('#selectButtonXaxis').property('value');
                 const yaxis_label = d3.select('#selectButtonYaxis').property('value');
-                // Update map and scatterplot with filtered data
+                // Update map, scatterplot and detailed view with filtered data
                 plots['geo_map'].update(plots, [filteredData]);
-                plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, xaxis_label, yaxis_label]);
+                plots['scatter_plot'].update(plots, [allDataFeatures, filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['detailed_view'].update(plots, [filteredData, tsunamiDataFeatures]);
             }
 
             // Check for any overlap between the selection and the cell positions for rows and columns

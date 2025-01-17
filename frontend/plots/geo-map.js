@@ -191,11 +191,11 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
                 (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
             )[0];
             plots['detailed_view'].update(plots, [[selectedDataPoint], tsunamiDataFeatures]);
-            plots['date_selection'].update(plots, [selectedDataPoint]);
+            plots['date_selection'].update(plots, [earthquakeData.features, [selectedDataPoint], tsunamiDataFeatures]);
             plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
         } else {
             plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
-            plots['date_selection'].update(plots, earthquakeData.features);
+            plots['date_selection'].update(plots, [earthquakeData.features, earthquakeData.features, tsunamiDataFeatures]);
             plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
         }
     });
@@ -284,7 +284,7 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
         );
 
         plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-        plots['date_selection'].update(plots, selectedData);
+        plots['date_selection'].update(plots, [earthquakeData.features, selectedData, tsunamiDataFeatures]);
         plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
     });
 
