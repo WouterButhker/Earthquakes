@@ -1,11 +1,10 @@
 import * as d3 from 'd3';
 
 export const detailed_view = {
-    render(plots, data) {
-        let selectedDataPoint = data;
-
+    render(plots, descriptionMapping) {
         const detailed_text = d3.select('#detailed_text').append('text');
         detailed_text.text('[no earthquake selected]');
+        // this.descriptionMapping = descriptionMapping; // Store the mapping
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
@@ -25,25 +24,11 @@ export const detailed_view = {
             selectedDataPoint = selectedDataPoint[0];
         }
 
-        // Change the Point of Interest text
+        // Update Point of Interest text
         changePOI(selectedDataPoint);
-        const detailed_text = d3.select('#detailed_text').select('text');
 
-        // Get a list of all the available properties of the selectedDataPoint
-        const listofProperties = Object.keys(selectedDataPoint.properties);
-
-        // TODO filter the list of properties to only show the relevant properties
-
-        var new_detailed_text = listofProperties.map((d) => d + ': ' + selectedDataPoint.properties[d]).join('<br>');
-
-        const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
-        // If there is a related tsunami, join the related tsunami to the detailed text
-        if (related_tsunami !== 'No related tsunamis') {
-            new_detailed_text += '<br>Related Tsunami: ' + related_tsunami;
-        }
-
-        // set html text as the new detailed text
-        detailed_text.html(new_detailed_text);
+        // Update the detailed text
+        d3.select('#detailed_text').select('text').html(generateDetails(selectedDataPoint, tsunamiDataFeatures));
     },
 };
 
@@ -73,18 +58,56 @@ function changePOI(selectedDataPoint) {
     }
 }
 
+function generateDetails(selectedDataPoint, tsunamiDataFeatures, descriptionMapping) {
+    const listofProperties = Object.keys(selectedDataPoint.properties);
+    const fieldMap = new Map();
+
+    // Handle paired fields and descriptions
+    const processedFields = new Set();
+    listofProperties.forEach((field) => {
+        if (processedFields.has(field)) return;
+        // Handle description fields
+            const value = selectedDataPoint.properties[field];
+            fieldMap.set(field, value); // Add to the map
+            processedFields.add(field);
+    });
+
+    // Format time field
+    const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
+    const timeParts = timeFields.map((field) => selectedDataPoint.properties[field]).filter((part) => part !== undefined);
+
+    if (timeParts.length > 0) {
+        const [year, month, day, hour, minute, second] = timeParts;
+        const formattedTime = formatDateTime(year, month, day, hour, minute, second);
+        fieldMap.set('Time', formattedTime); // Add formatted time to the map
+    }
+
+    // Add related tsunami information
+    const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
+    if (related_tsunami !== 'No related tsunamis') {
+        fieldMap.set('Related Tsunami', related_tsunami); // Add tsunami info to the map
+    }
+
+    // Generate HTML from the map
+    let new_detailed_text = '';
+    const deletedFields = new Set(['Id', 'Tsu'].concat(timeFields));
+    for (const field of deletedFields) fieldMap.delete(field);
+    fieldMap.forEach((value, key) => new_detailed_text += `${key}: ${value}<br>`);
+
+    return new_detailed_text;
+}
+
 function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
     const tsunamiID = selectedDataPoint.properties.Tsu;
     if (tsunamiID === undefined) {
         return 'No related tsunamis';
     } else {
         const selectedData = tsunamiDataFeatures.filter((d) => d.properties.Id == tsunamiID);
-        console.log('related tsunami data: ', selectedData);
         return selectedData[0].properties['Location Name'];
     }
 }
 
-function getDateString(month, year) {
+function formatDateTime(year, month, day, hour, minute, second) {
     const months = [
         'January',
         'February',
@@ -100,5 +123,20 @@ function getDateString(month, year) {
         'December',
     ];
 
-    return months[month] + ' ' + year;
+    const monthName = month ? months[month - 1] : '';
+    const dateParts = [
+        monthName,
+        ' ',
+        day ? day.toString().padStart(2, '0') : '',
+        ', ',
+        year || '',
+        ' ',
+        hour !== undefined ? hour.toString().padStart(2, '0') : '',
+        ':',
+        minute !== undefined ? minute.toString().padStart(2, '0') : '',
+        ':',
+        second !== undefined ? second.toString().padStart(2, '0') : '',
+    ].filter(Boolean);
+
+    return dateParts.length > 0 ? dateParts.join('') : 'Unknown time';
 }
