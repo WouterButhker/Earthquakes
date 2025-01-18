@@ -1,6 +1,9 @@
 import * as d3 from 'd3';
 
 let descriptionMapping = null;
+const descFields = ['Deaths', 'Injuries', 'Missing', 'Damage ($Mil)', 'Houses Destroyed', 'Houses Damaged'];
+const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
+const skippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude'].concat(timeFields);
 
 export const detailed_view = {
     render(plots, cmap) {
@@ -9,7 +12,12 @@ export const detailed_view = {
         // Store description mapping from legend colormap
         descriptionMapping = new Map();
         for (const [key, value] of Object.entries(cmap)) {
-            descriptionMapping.set(key, value.map(d => d.label));
+            let baseField = key.replace(' Description', '').replace('Total ', '');
+            if (baseField == 'Damage') baseField = 'Damage ($Mil)';
+            descriptionMapping.set(
+                baseField,
+                value.map((d) => d.label),
+            );
         }
     },
     update(plots, data) {
@@ -65,39 +73,47 @@ function changePOI(selectedDataPoint) {
 }
 
 function generateDetails(selectedDataPoint, tsunamiDataFeatures) {
-    const listofProperties = Object.keys(selectedDataPoint.properties);
+    let listofProperties = Object.keys(selectedDataPoint.properties);
     const fieldMap = new Map();
 
     // Handle paired fields and descriptions
-    const processedFields = new Set();
+    const pairFields = new Map();
+    for (let base of descFields) {
+        // Process both regular and total fields
+        for (let prefix of ['', 'Total ']) {
+            let f = prefix + base;
+            let desc = `${f} Description`.replace(' ($Mil)', '');
+            // Use a value if present
+            if (listofProperties.includes(f)) {
+                const value = selectedDataPoint.properties[f];
+                pairFields.set(f, value);
+                // Else use a remapped description if present
+            } else if (listofProperties.includes(desc)) {
+                const descValue = selectedDataPoint.properties[desc];
+                const mappedValue = descriptionMapping.get(base)[parseInt(descValue)] || descValue;
+                pairFields.set(f, mappedValue);
+            }
+        }
+    }
+
+    // Handle other fields
     listofProperties.forEach((field) => {
-        // Handle description fields
-        // if (field.endsWith(' Description')) {
-        //     const baseField = field.replace(' Description', '');
-        //     if (listofProperties.includes(baseField)) {
-        //         const value = selectedDataPoint.properties[baseField];
-        //         fieldMap.set(baseField, value); // Add to the map
-        //     } else {
-        //         const descValue = selectedDataPoint.properties[field];
-        //         const mappedValue = descValue;
-        //         // const mappedValue = descriptionMapping.get(baseField)[descValue] || descValue;
-        //         fieldMap.set(baseField, mappedValue); // Add to the map
-        //     }
-        //     processedFields.add(baseField);
-        //     processedFields.add(field);
-        // Handle regular fields
-        // } else if (!processedFields.has(field)) {
-
-
-
+        // Skipped pair
+        if (
+            field.includes('Description') ||
+            descFields.includes(field.replace('Total ', '')) ||
+            skippedFields.includes(field)
+        )
+            return;
         const value = selectedDataPoint.properties[field];
         fieldMap.set(field, value);
-        processedFields.add(field);
     });
 
+    // Append paired fields
+    for (const [field, value] of pairFields) fieldMap.set(field, value);
+
     // Format time field
-    const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
-    const timeParts = timeFields.map((field) => selectedDataPoint.properties[field]).filter((part) => part !== undefined);
+    const timeParts = timeFields.map((f) => selectedDataPoint.properties[f]).filter((p) => p !== undefined);
     if (timeParts.length > 0) {
         const [year, month, day, hour, minute, second] = timeParts;
         const formattedTime = formatDateTime(year, month, day, hour, minute, second);
@@ -112,10 +128,7 @@ function generateDetails(selectedDataPoint, tsunamiDataFeatures) {
 
     // Generate HTML from the map
     let new_detailed_text = '';
-    const deletedFields = new Set(['Id', 'Tsu'].concat(timeFields));
-    for (const field of deletedFields) fieldMap.delete(field);
-    fieldMap.forEach((value, key) => new_detailed_text += `${key}: ${value}<br>`);
-
+    fieldMap.forEach((value, key) => (new_detailed_text += `${key}: ${value}<br>`));
     return new_detailed_text;
 }
 

@@ -109,10 +109,10 @@ export const colorMapping = {
     ],
     'Total Missing Description': [
         { label: 'None', color: '#88cc88' },
-        { label: 'Few (~1 to 50 deaths)', color: '#ffcc00' },
-        { label: 'Some (~51 to 100 deaths)', color: '#ff9933' },
-        { label: 'Many (~101 to 1000 deaths)', color: '#ff6666' },
-        { label: 'Very many (over 1000 deaths)', color: '#cc0000' },
+        { label: 'Few (~1 to 50 missing)', color: '#ffcc00' },
+        { label: 'Some (~51 to 100 missing)', color: '#ff9933' },
+        { label: 'Many (~101 to 1000 missing)', color: '#ff6666' },
+        { label: 'Very many (over 1000 missing)', color: '#cc0000' },
         { label: 'Unknown', color: '#888888' },
     ],
     'Total Injuries Description': [
