@@ -1,9 +1,11 @@
 import * as d3 from 'd3';
 
 let descriptionMapping = null;
+let content = document.getElementById('details-content');
 const descFields = ['Deaths', 'Injuries', 'Missing', 'Damage ($Mil)', 'Houses Destroyed', 'Houses Damaged'];
 const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
 const skippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude'].concat(timeFields);
+const tsunamiSkippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude'].concat(timeFields);
 
 export const detailed_view = {
     render(plots, cmap) {
@@ -19,22 +21,24 @@ export const detailed_view = {
                 value.map((d) => d.label),
             );
         }
+        content.innerHTML = "<div class='details-section'>[no earthquake selected]</div>";
+        d3.select('#poi_text').text('[no earthquakes selected]');
     },
     update(plots, data) {
         let [selectedDataPoint, tsunamiDataFeatures] = data;
 
         if (selectedDataPoint === undefined || (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 0)) {
-            d3.select('#detailed_text').select('text').text('[no earthquake selected]');
+            content.innerHTML = "<div class='details-section'>[no earthquake selected]</div>";
             d3.select('#poi_text').text('[no earthquakes selected]');
             return;
         }
-        if (Array.isArray(selectedDataPoint) && selectedDataPoint.length > 1) {
-            d3.select('#detailed_text')
-                .select('text')
-                .text('[multiple earthquakes selected. Please select a single earthquake to view details]');
-            d3.select('#poi_text').text('[multiple earthquakes selected]');
-            return;
-        } else if (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 1) {
+        // if (Array.isArray(selectedDataPoint) && selectedDataPoint.length > 1) {
+        //     let multipleText = '[multiple earthquakes selected. Please select a single earthquake to view details]';
+        //     content.innerHTML = `<div class='details-section'>${multipleText}</div>`;
+        //     d3.select('#poi_text').text('[multiple earthquakes selected]');
+        //     return;
+        // }
+        else if (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 1) {
             selectedDataPoint = selectedDataPoint[0];
         }
 
@@ -42,7 +46,7 @@ export const detailed_view = {
         changePOI(selectedDataPoint);
 
         // Update the detailed text
-        d3.select('#detailed_text').select('text').html(generateDetails(selectedDataPoint, tsunamiDataFeatures));
+        content.innerHTML = generateDetails(selectedDataPoint, tsunamiDataFeatures);
     },
 };
 
@@ -73,72 +77,74 @@ function changePOI(selectedDataPoint) {
 }
 
 function generateDetails(selectedDataPoint, tsunamiDataFeatures) {
-    let listofProperties = Object.keys(selectedDataPoint.properties);
-    const fieldMap = new Map();
-
-    // Handle paired fields and descriptions
-    const pairFields = new Map();
-    for (let base of descFields) {
-        // Process both regular and total fields
-        for (let prefix of ['', 'Total ']) {
-            let f = prefix + base;
-            let desc = `${f} Description`.replace(' ($Mil)', '');
-            // Use a value if present
-            if (listofProperties.includes(f)) {
-                const value = selectedDataPoint.properties[f];
-                pairFields.set(f, value);
-                // Else use a remapped description if present
-            } else if (listofProperties.includes(desc)) {
-                const descValue = selectedDataPoint.properties[desc];
-                const mappedValue = descriptionMapping.get(base)[parseInt(descValue)] || descValue;
-                pairFields.set(f, mappedValue);
+    const fieldMap = new Map(),
+        tsunamiFieldMap = new Map();
+    for (let [props, map, skipped] of [
+        [selectedDataPoint.properties, fieldMap, skippedFields],
+        [getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures), tsunamiFieldMap, tsunamiSkippedFields],
+    ]) {
+        if (!props) continue;
+        let listofProperties = Object.keys(props);
+        // Handle paired fields and descriptions
+        const pairFields = new Map();
+        for (let base of descFields) {
+            // Process both regular and total fields
+            for (let prefix of ['', 'Total ']) {
+                let f = prefix + base;
+                let desc = `${f} Description`.replace(' ($Mil)', '');
+                // Use a value if present
+                if (listofProperties.includes(f)) {
+                    const value = props[f];
+                    pairFields.set(f, value);
+                    // Else use a remapped description if present
+                } else if (listofProperties.includes(desc)) {
+                    const descValue = props[desc];
+                    const mappedValue = descriptionMapping.get(base)[parseInt(descValue)] || descValue;
+                    pairFields.set(f, mappedValue);
+                }
             }
+        }
+        // Handle other fields
+        listofProperties.forEach((field) => {
+            // Skipped pair
+            if (
+                field.includes('Description') ||
+                descFields.includes(field.replace('Total ', '')) ||
+                skipped.includes(field)
+            )
+                return;
+            const value = props[field];
+            map.set(field, value);
+        });
+        // Append paired fields
+        for (const [field, value] of pairFields) map.set(field, value);
+        // Format time field
+        const timeParts = timeFields.map((f) => props[f]).filter((p) => p !== undefined);
+        if (timeParts.length > 0) {
+            const [year, month, day, hour, minute, second] = timeParts;
+            const formattedTime = formatDateTime(year, month, day, hour, minute, second);
+            map.set('Time', formattedTime);
         }
     }
 
-    // Handle other fields
-    listofProperties.forEach((field) => {
-        // Skipped pair
-        if (
-            field.includes('Description') ||
-            descFields.includes(field.replace('Total ', '')) ||
-            skippedFields.includes(field)
-        )
-            return;
-        const value = selectedDataPoint.properties[field];
-        fieldMap.set(field, value);
-    });
-
-    // Append paired fields
-    for (const [field, value] of pairFields) fieldMap.set(field, value);
-
-    // Format time field
-    const timeParts = timeFields.map((f) => selectedDataPoint.properties[f]).filter((p) => p !== undefined);
-    if (timeParts.length > 0) {
-        const [year, month, day, hour, minute, second] = timeParts;
-        const formattedTime = formatDateTime(year, month, day, hour, minute, second);
-        fieldMap.set('Time', formattedTime);
-    }
-
-    // Add related tsunami information
-    const related_tsunami = getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures);
-    if (related_tsunami !== 'No related tsunamis') {
-        fieldMap.set('Related Tsunami', related_tsunami); // Add tsunami info to the map
-    }
-
     // Generate HTML from the map
-    let new_detailed_text = '';
+    let new_detailed_text = "<div class='details-section'> <b>Earthquake Details:</b><br>";
     fieldMap.forEach((value, key) => (new_detailed_text += `${key}: ${value}<br>`));
+    new_detailed_text += '</div>';
+    if (tsunamiFieldMap.size > 0) {
+        new_detailed_text += "<div class='details-section'> <b>Related Tsunami Details:</b><br>";
+        tsunamiFieldMap.forEach((value, key) => (new_detailed_text += `${key}: ${value}<br>`));
+        new_detailed_text += '</div>';
+    }
     return new_detailed_text;
 }
 
 function getRelatedTsunamis(selectedDataPoint, tsunamiDataFeatures) {
     const tsunamiID = selectedDataPoint.properties.Tsu;
-    if (tsunamiID === undefined) {
-        return 'No related tsunamis';
-    } else {
+    if (!tsunamiID) return undefined;
+    else {
         const selectedData = tsunamiDataFeatures.filter((d) => d.properties.Id == tsunamiID);
-        return selectedData[0].properties['Location Name'];
+        return selectedData[0].properties;
     }
 }
 

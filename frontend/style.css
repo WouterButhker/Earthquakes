@@ -277,7 +277,7 @@ svg {
     margin-bottom: 5px;
 }
 
-.details-content {
+#details-content {
     font-size: 0.9em;
     line-height: 1.5em;
     color: #666;
@@ -285,7 +285,9 @@ svg {
     border-radius: 5px;
     padding: 8px;
     background-color: #f7f7f7;
-    column-count: 2;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
 }
 
 /* Points of Interest view */
