@@ -98,6 +98,12 @@ export const date_selection = {
         d3.select("#backButton").on("click", function() {
             dataHistory.pop();
             plots['date_selection'].update(plots, lastStateData);
+            const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+            const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+            // Update map and scatterplot with filtered data
+            plots['geo_map'].update(plots, [lastStateData]);
+            // plots['scatter_plot'].update(plots, [earthquakeDataFeatures, lastStateData, xaxis_label, yaxis_label]);
+
         });
 
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
@@ -107,6 +113,8 @@ export const date_selection = {
             range: range.start === range.end ? `${range.start}` : `${range.start}-${range.end}`,
             data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
+
+        console.log(data);
 
         // Create scales
         const xScale = d3
@@ -164,13 +172,21 @@ export const date_selection = {
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
                 let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
-
+                
                 // Prevent rendering if no data is found
                 if (selectedData.length === 0) {
                     console.log('No data found for selected year range');
                     return;
                 }
                 plots['date_selection'].update(plots, selectedData);
+
+                if (selectedData.length > 0) {
+                    const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+                    const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+                    // Update map and scatterplot with filtered data
+                    plots['geo_map'].update(plots, [selectedData]);
+                    // plots['scatter_plot'].update(plots, [earthquakeDataFeatures, selectedData, xaxis_label, yaxis_label]);
+                }
             });
 
         // Add month label
@@ -196,7 +212,7 @@ export const date_selection = {
 
         const brush = d3.brush()
             .extent([[0, 0], [width, height]])
-            .on('end', brushed);
+            .on('start brush end', brushed);
 
         const brushG = g.append('g')
             .attr('class', 'brush')
@@ -241,7 +257,7 @@ export const date_selection = {
                 const yaxis_label = d3.select('#selectButtonYaxis').property('value');
                 // Update map and scatterplot with filtered data
                 plots['geo_map'].update(plots, [filteredData]);
-                plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, xaxis_label, yaxis_label]);
+                // plots['scatter_plot'].update(plots, [earthquakeDataFeatures, filteredData, xaxis_label, yaxis_label]);
             }
 
             // Check for any overlap between the selection and the cell positions for rows and columns
@@ -252,7 +268,7 @@ export const date_selection = {
                 return y0 <= yPosition + yHeight && yPosition <= y1;
             });
             
-            const selectedMonths = d3.range(0, 12).filter(month => {
+            const selectedMonths = d3.range(0, 13).filter(month => {
                 const xPosition = xScale(month);
                 const xWidth = xScale.bandwidth();
                 // Check if there's any overlap in the X-axis
@@ -307,6 +323,7 @@ function createYearRanges(minYear, maxYear, rangeSize) {
     }
     return yearRanges;
 }
+
 
 function selectData(earthquakeDataFeatures, startYear, endYear) {
     const selectedData = earthquakeDataFeatures.filter((feature) => {
