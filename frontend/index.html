@@ -21,7 +21,7 @@
             <div id="dateSelectionDiv" class="plot-container">
                 <div class="plot-header">Click and drag to select a timeframe.</div>
                 <svg id="dateSelection"></svg>
-                <button id="date-backButton">Previous year ranges</button>
+                <button id="date-backButton" class="button button-reset">Previous year ranges</button>
             </div>
             <!-- Map -->
             <div class="plot-container">
@@ -33,7 +33,7 @@
                             <div class="controls-section">
                                 <div>
                                     <label for="size">Dot size:&nbsp;</label>
-                                    <select name="size" id="size">
+                                    <select name="size" id="size"  class="dropdown">
                                         <option value="Mag">Magnitude</option>
                                         <option value="Focal Depth (km)">Focal Depth (km)</option>
                                         <option value="MMI Int">Modified Mercalli Intensity</option>
@@ -46,7 +46,7 @@
                                 </div>
                                 <div>
                                     <label for="color">Dot color:</label>
-                                    <select name="color" id="color">
+                                    <select name="color" id="color" class="dropdown">
                                         <option value="Tsu">Earthquake Caused Tsunami</option>
                                         <option value="Country">Country</option>
                                         <option value="MMI Int">Modified Mercalli Intensity</option>
@@ -67,7 +67,7 @@
                                     <label for="viewToggle"></label>
                                     <span class="toggle-label">Heatmap</span>
                                 </div>
-                                <button id="resetButton" style="top: 8px;">Reset Plots</button>
+                                <button id="resetButton" class="button button-reset" style="top: 8px;">Reset Plots</button>
                             </div>
                         </div>
                     </div>
@@ -83,11 +83,11 @@
                 <div class="scatter-controls">
                     <div>
                         <label for="selectButtonXaxis">X-axis:</label>
-                        <select id="selectButtonXaxis"></select>
+                        <select id="selectButtonXaxis" class="dropdown"></select>
                     </div>
                     <div>
                         <label for="selectButtonYaxis">Y-axis:</label>
-                        <select id="selectButtonYaxis"></select>
+                        <select id="selectButtonYaxis" class="dropdown"></select>
                     </div>
                 </div>
                 <svg id="scatterplot"></svg>
