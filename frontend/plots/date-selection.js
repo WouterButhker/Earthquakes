@@ -17,8 +17,10 @@ let dataHistory = []; // Initialize the data history stack
 export const date_selection = {
     render(plots, data) {
         if (data) saveCurrentDataState(data); // Save the current data state before any changes
-        // console.log(dataHistory);
-        let earthquakeDataFeatures = data;
+
+        // let earthquakeDataFeatures = data;
+        let [allDataFeatures, pointsToFilter, tsunamiDataFeatures] = data;
+
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -33,7 +35,7 @@ export const date_selection = {
         const g = svg.append('g').attr('transform', `translate(${margin.left + yearLabelOffset},${margin.top})`);
 
         const counts = d3.rollup(
-            earthquakeDataFeatures,
+            pointsToFilter,
             (v) => v.length, // Counting occurrences
             (d) => parseInt(d.properties.Year),
             (d) => {
@@ -43,11 +45,11 @@ export const date_selection = {
         );
 
         // Find the range of years in the dataset
-        const minYear = d3.min(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
-        const maxYear = d3.max(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
+        const minYear = d3.min(pointsToFilter, (d) => parseInt(d.properties.Year));
+        const maxYear = d3.max(pointsToFilter, (d) => parseInt(d.properties.Year));
 
         // Determine the range of years in the dataset
-        const yearExtent = d3.extent(earthquakeDataFeatures, (d) => parseInt(d.properties.Year));
+        const yearExtent = d3.extent(pointsToFilter, (d) => parseInt(d.properties.Year));
 
         // Generate full year and month data
         let yearMonthData = [];
@@ -68,16 +70,9 @@ export const date_selection = {
             }
         }
 
-        // console.log(yearMonthData);
-
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
-
-        // console.log(`unique years: ${numUniqueYears}`);
-        // console.log(`min and max years: ${minYear} - ${maxYear}`);
-        // console.log(`Year range: ${yrRange}`);
-
-        let lastStateData = [];
+        let lastStateData = []; 
 
         if (yrRange > 500) {
             rangeSize = 500;
@@ -102,12 +97,8 @@ export const date_selection = {
 
         d3.select('#date-backButton').on('click', function () {
             dataHistory.pop();
-            plots['date_selection'].update(plots, lastStateData);
+            plots['date_selection'].update(plots, [allDataFeatures, lastStateData, tsunamiDataFeatures]);
         });
-
-        //
-        // console.log(`Range size: ${rangeSize}`);
-
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
         // Iterate over each year range and store results
@@ -115,8 +106,6 @@ export const date_selection = {
             range: range.start === range.end ? `${range.start}` : `${range.start}-${range.end}`,
             data: aggregateDataByYearRange(yearMonthData, range.start, range.end),
         }));
-
-        // console.log(count_data);
 
         // Create scales
         const xScale = d3
@@ -173,15 +162,14 @@ export const date_selection = {
                 const yearRange = d.match(/(?<!\d)-?\d+/g).map(Number);
                 const startYear = yearRange[0];
                 const endYear = yearRange[1];
-                // console.log(startYear, endYear);
-                let selectedData = selectData(earthquakeDataFeatures, startYear, endYear);
+                let selectedData = selectData(pointsToFilter, startYear, endYear);
 
                 // Prevent rendering if no data is found
                 if (selectedData.length === 0) {
                     console.log('No data found for selected year range');
                     return;
                 }
-                plots['date_selection'].update(plots, selectedData);
+                plots['date_selection'].update(plots, [allDataFeatures, selectedData, tsunamiDataFeatures]);
             });
 
         // Add month label
@@ -219,7 +207,6 @@ export const date_selection = {
             const selection = event.selection;
             if (!selection) {
                 console.log('No selection');
-                clearBrush(); // Clear visual selection when the brush is cleared
                 return;
             }
 
@@ -250,16 +237,16 @@ export const date_selection = {
             });
 
             // Filter the data based on the selected year ranges and months
-            let filteredData = filterDataByYearAndMonths(
-                earthquakeDataFeatures,
-                selectedYearRanges,
-                selectedMonthRanges,
-            );
-            console.log('Filtered data:', filteredData);
+            let filteredData = filterDataByYearAndMonths(pointsToFilter, selectedYearRanges, selectedMonthRanges);
 
-            // plots['geo-map'].update(plots, [filteredData]);
-            // plots['scatter_plot'].update(plots, [filteredData]);
-
+            if (filteredData.length > 0) {
+                const xaxis_label = d3.select('#selectButtonXaxis').property('value');
+                const yaxis_label = d3.select('#selectButtonYaxis').property('value');
+                // Update map, scatterplot and detailed view with filtered data
+                plots['geo_map'].update(plots, [filteredData]);
+                plots['scatter_plot'].update(plots, [allDataFeatures, filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['detailed_view'].update(plots, [filteredData, tsunamiDataFeatures]);
+            }
             // Check for any overlap between the selection and the cell positions for rows and columns
             const selectedRanges = count_data.filter((d) => {
                 const yPosition = yScale(d.range);
@@ -276,16 +263,15 @@ export const date_selection = {
             });
 
             // Update the cell colors based on selection
-            rows.selectAll('.cell').style('fill', function (d) {
-                const isInRange = selectedRanges.some((range) => range.range === this.parentNode.__data__.range);
-                const isMonthSelected = selectedMonths.includes(d.month);
-                return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
-            });
-        }
+            rows.selectAll('.cell')
+                .style('fill', function (d) {
+                    const isInRange = selectedRanges.some(range => range.range === this.parentNode.__data__.range);
+                    const isMonthSelected = selectedMonths.includes(d.month);
+                    return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
+                });
 
-        function clearBrush() {
-            g.select('.brush').call(brush.move, null);
-            g.selectAll('.cell').style('fill', (d) => colorScale(d.count)); // Reset all cells to their original color
+            // Clear the brush after selection
+            brushG.call(brush.move, null);
         }
     },
     update(plots, data) {
