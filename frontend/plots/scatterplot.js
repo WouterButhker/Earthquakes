@@ -140,13 +140,24 @@ export const scatter_plot = {
             );
 
             if (selectedDataFeatures.length !== 0) {
-                plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    selectedDataFeatures,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
                 plots['date_selection'].update(plots, [allDataFeatures, selectedDataFeatures, tsunamiDataFeatures]);
                 plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [selectedDataFeatures]);
-            }
-            else {
-                plots['scatter_plot'].update(plots, [allDataFeatures, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            } else {
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    undefined,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
                 plots['date_selection'].update(plots, [allDataFeatures, allDataFeatures, tsunamiDataFeatures]);
                 plots['detailed_view'].update(plots, [allDataFeatures, tsunamiDataFeatures]);
                 plots['geo_map'].update(plots, [allDataFeatures]);
@@ -174,7 +185,13 @@ export const scatter_plot = {
                             yScale(d.properties[yaxis_label]) < y1,
                     );
                     plots['date_selection'].update(plots, [allDataFeatures, selectedDataFeatures, tsunamiDataFeatures]);
-                    plots['scatter_plot'].update(plots, [allDataFeatures, selectedDataFeatures, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+                    plots['scatter_plot'].update(plots, [
+                        allDataFeatures,
+                        selectedDataFeatures,
+                        xaxis_label,
+                        yaxis_label,
+                        tsunamiDataFeatures,
+                    ]);
                     plots['detailed_view'].update(plots, [selectedDataFeatures, tsunamiDataFeatures]);
                     plots['geo_map'].update(plots, [selectedDataFeatures]);
                 }
@@ -257,10 +274,9 @@ export const scatter_plot = {
             });
             // Message that there are no points to highlight due to missing data
             if (highlight_points.length == 0) {
-                d3.select('#scatterplot_message').html("No earthquake is highlighted due to missing data.");
-            }
-            else  {
-                d3.select('#scatterplot_message').html("");
+                d3.select('#scatterplot_message').html('No earthquake is highlighted due to missing data.');
+            } else {
+                d3.select('#scatterplot_message').html('');
             }
 
             // Remove the undefined features that are undefined for the all the points
@@ -379,12 +395,23 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
 
         // If no points are highlighted
         if (highlightedDatePoints.length === 0) {
-            plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
+            plots['scatter_plot'].render(plots, [
+                earthquakeData.features,
+                undefined,
+                newX_label,
+                newY_label,
+                tsunamiData.features,
+            ]);
             return;
-        }
-        else{
+        } else {
             // Render the new scatterplot
-            plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+            plots['scatter_plot'].render(plots, [
+                earthquakeData.features,
+                highlightedDatePoints,
+                newX_label,
+                newY_label,
+                tsunamiData.features,
+            ]);
         }
     });
 
@@ -402,13 +429,23 @@ export function addScatterplotAxisInteractions(plots, earthquakeData, tsunamiDat
 
         // If no points are highlighted
         if (highlightedDatePoints.length === 0) {
-            plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, newX_label, newY_label, tsunamiData.features]);
+            plots['scatter_plot'].render(plots, [
+                earthquakeData.features,
+                undefined,
+                newX_label,
+                newY_label,
+                tsunamiData.features,
+            ]);
             return;
-        }
-        else{
+        } else {
             // Render the new scatterplot
-            plots['scatter_plot'].render(plots, [earthquakeData.features, highlightedDatePoints, newX_label, newY_label, tsunamiData.features]);
+            plots['scatter_plot'].render(plots, [
+                earthquakeData.features,
+                highlightedDatePoints,
+                newX_label,
+                newY_label,
+                tsunamiData.features,
+            ]);
         }
-
     });
 }

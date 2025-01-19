@@ -18,9 +18,7 @@ export const date_selection = {
     render(plots, data) {
         if (data) saveCurrentDataState(data); // Save the current data state before any changes
 
-        // let earthquakeDataFeatures = data;
         let [allDataFeatures, pointsToFilter, tsunamiDataFeatures] = data;
-
 
         // If width is not set, use the first client params for all next renders
         if (!width) {
@@ -72,7 +70,7 @@ export const date_selection = {
 
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
-        let lastStateData = []; 
+        let lastStateData = [];
 
         if (yrRange > 500) {
             rangeSize = 500;
@@ -97,7 +95,7 @@ export const date_selection = {
 
         d3.select('#date-backButton').on('click', function () {
             dataHistory.pop();
-            plots['date_selection'].update(plots, [allDataFeatures, lastStateData, tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, [allDataFeatures, lastStateData[1], tsunamiDataFeatures]);
         });
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
@@ -244,8 +242,14 @@ export const date_selection = {
                 const yaxis_label = d3.select('#selectButtonYaxis').property('value');
                 // Update map, scatterplot and detailed view with filtered data
                 plots['geo_map'].update(plots, [filteredData]);
-                plots['scatter_plot'].update(plots, [allDataFeatures, filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                plots['detailed_view'].update(plots, [filteredData, tsunamiDataFeatures]);
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    filteredData,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
+                plots['detailed_view'].update(plots, [filteredData[0], tsunamiDataFeatures]);
             }
             // Check for any overlap between the selection and the cell positions for rows and columns
             const selectedRanges = count_data.filter((d) => {
@@ -263,12 +267,11 @@ export const date_selection = {
             });
 
             // Update the cell colors based on selection
-            rows.selectAll('.cell')
-                .style('fill', function (d) {
-                    const isInRange = selectedRanges.some(range => range.range === this.parentNode.__data__.range);
-                    const isMonthSelected = selectedMonths.includes(d.month);
-                    return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
-                });
+            rows.selectAll('.cell').style('fill', function (d) {
+                const isInRange = selectedRanges.some((range) => range.range === this.parentNode.__data__.range);
+                const isMonthSelected = selectedMonths.includes(d.month);
+                return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
+            });
 
             // Clear the brush after selection
             brushG.call(brush.move, null);
