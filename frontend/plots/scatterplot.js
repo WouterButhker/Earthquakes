@@ -101,6 +101,7 @@ export const scatter_plot = {
             if (chosenEvent.srcElement === null) {
                 return;
             }
+            d3.selectAll('.poi-button').classed('selected', false);
 
             // Filter the current earthquake data to only include earthquakes with the same values as the chosen point
             const selectedDataFeatures = allDataFeatures.filter(
@@ -134,6 +135,7 @@ export const scatter_plot = {
             .on('end', ({selection}) => {
                 if (isClearingBrush) return;
                 if (selection) {
+                    d3.selectAll('.poi-button').classed('selected', false);
                     const [[x0, y0], [x1, y1]] = selection;
 
                     const selectedDataFeatures = allDataFeatures.filter(

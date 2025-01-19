@@ -29,6 +29,7 @@ plots['detailed_view'].render(plots, undefined);
 
 // Reset button
 d3.select('#resetButton').on('click', function () {
+    d3.selectAll('.poi-button').classed('selected', false);
     plots['scatter_plot'].render(plots, [earthquakeData.features, undefined, 'Mag', 'Focal Depth (km)', tsunamiData.features]);
     plots['date_selection'].update(plots, [earthquakeData.features, earthquakeData.features, tsunamiData.features]);
     plots['detailed_view'].update(plots, [undefined, undefined]);
@@ -59,6 +60,8 @@ viewToggle.addEventListener('change', () => {
 /* ========================================================================== */
 
 d3.select('#pointOfInterest1').on('click', function () {
+    d3.selectAll('.poi-button').classed('selected', false);
+    d3.select(this).classed('selected', true);
     // get the earthquake that has an id of "3227"
     const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '3227');
 
@@ -68,6 +71,8 @@ d3.select('#pointOfInterest1').on('click', function () {
     plots['geo_map'].update(plots, [interestPoint]);
 });
 d3.select('#pointOfInterest2').on('click', function () {
+    d3.selectAll('.poi-button').classed('selected', false);
+    d3.select(this).classed('selected', true);
     // get the earthquake that has an id of "7843"
     const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '7843');
 
