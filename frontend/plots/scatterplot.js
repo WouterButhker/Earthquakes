@@ -50,24 +50,30 @@ export const scatter_plot = {
         // Define scales
         const xExtent = d3.extent(all_points, (d) => d.x_value);
         const yExtent = d3.extent(all_points, (d) => d.y_value);
-        var xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
+
+        let xScale = d3.scaleLinear().domain([0, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
+        let xAxis;
         if (xExtent[1] > 1000) {
             xScale = d3.scaleSymlog().domain([0.1, xExtent[1]]).nice().range([0, width]).unknown(margin.left);
+            xAxis = d3.axisBottom(xScale).tickValues(generateLogTicks(xScale));
+        } else {
+            xAxis = d3.axisBottom(xScale).ticks(10);
         }
 
-        var yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+        let yScale = d3.scaleLinear().domain([0, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+        let yAxis;
         if (yExtent[1] > 1000) {
             yScale = d3.scaleSymlog().domain([0.1, yExtent[1]]).nice().range([height, 0]).unknown(height - margin.bottom);
+            yAxis = d3.axisLeft(yScale).tickValues(generateLogTicks(yScale));
+        } else {
+            yAxis = d3.axisLeft(yScale).ticks(10);
         }
 
         // Add axes
-        const xAxis = d3.axisBottom(xScale);
-        const yAxis = d3.axisLeft(yScale);
-
-        // Append axes to the plot group
         plotGroup.append('g').attr('class', 'x-axis').attr('transform', `translate(0, ${height})`).call(xAxis);
 
         plotGroup.append('g').attr('class', 'y-axis').call(yAxis);
+
         // Add axis labels
         plotGroup
             .append('text')
@@ -77,30 +83,6 @@ export const scatter_plot = {
             .style('font-size', '12px')
             .style('fill', 'black')
             .text(xaxis_label);
-
-        // TODO do we want to have four labels or should the axes be longer?
-        // rotate the tick labels by 45 degrees and only keep 4 labels
-        if (xExtent[1] > 1000) {
-            plotGroup.selectAll('.x-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
-            // only keep first, second, fourth and last tick label
-            plotGroup.selectAll('.x-axis .tick text')
-                .filter((d, i, nodes) => {
-                    const totalTicks = nodes.length;
-                    return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
-                })
-                .remove();
-        }
-
-        if (yExtent[1] > 1000) {
-            plotGroup.selectAll('.y-axis .tick text').attr('transform', 'rotate(-25)').style('text-anchor', 'end');
-            // only keep first, second, fourth and last tick label
-            plotGroup.selectAll('.y-axis .tick text')
-            .filter((d, i, nodes) => {
-                const totalTicks = nodes.length;
-                return i !== 0 && i !== 1 && i !== 4 && i !== totalTicks - 1;
-            })
-            .remove();
-        }
 
         plotGroup
             .append('text')
@@ -212,6 +194,7 @@ export const scatter_plot = {
             const y_value = d.properties[yaxis_label];
             return { x_value, y_value };
         });
+
         // Define scales
         const xExtent = d3.extent(all_points, (d) => d.x_value);
         const yExtent = d3.extent(all_points, (d) => d.y_value);
@@ -303,6 +286,17 @@ export const scatter_plot = {
         }
         
     },
+};
+
+const generateLogTicks = (scale, base = 10) => {
+    const domain = scale.domain();
+    const logTicks = [];
+    let start = Math.ceil(Math.log10(domain[0] || 1)); // Avoid log(0) by using 1
+    let end = Math.floor(Math.log10(domain[1]));
+    for (let i = start; i <= end; i++) {
+        logTicks.push(Math.pow(base, i));
+    }
+    return logTicks;
 };
 
 // Options for both the dropdowns of the axis in the scatterplot
