@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 
 const svg = d3.select('#dateSelection');
+const backButton = d3.select('#date-backButton').node();
 // Margins for svg element
 const margin = { top: 50, right: 30, bottom: 50, left: 60 };
 // Width/height of svg element - initially uninitialized
@@ -11,12 +12,11 @@ const legendWidth = 200,
 // Offset for year label from the y-axis (avoid overlap with years)
 const yearLabelOffset = 25;
 
-let dataHistory = [];  // Initialize the data history stack
+let dataHistory = []; // Initialize the data history stack
 
 export const date_selection = {
     render(plots, data) {
-
-        if (data) saveCurrentDataState(data);  // Save the current data state before any changes
+        if (data) saveCurrentDataState(data); // Save the current data state before any changes
 
         let [allDataFeatures, pointsToFilter, tsunamiDataFeatures] = data;
 
@@ -56,7 +56,8 @@ export const date_selection = {
             if (!monthMap) {
                 monthMap = new Map(Array.from({ length: 13 }, (_, i) => [i, 0])); // Including `12` index
             } else {
-                for (let i = 0; i <= 12; i++) { // Ensure months 0-12 are considered
+                for (let i = 0; i <= 12; i++) {
+                    // Ensure months 0-12 are considered
                     if (!monthMap.has(i)) {
                         monthMap.set(i, 0); // Set count to 0 for missing months
                     }
@@ -69,8 +70,7 @@ export const date_selection = {
 
         let rangeSize = 0;
         let yrRange = Math.abs(minYear - maxYear);
-
-        let lastStateData = []; 
+        let lastStateData = [];
 
         if (yrRange > 500) {
             rangeSize = 500;
@@ -80,26 +80,28 @@ export const date_selection = {
             rangeSize = 100;
             backButton.disabled = false;
             lastStateData = dataHistory[0];
-    
         } else if (yrRange >= 10 && yrRange <= 100) {
             rangeSize = 10;
             backButton.disabled = false;
             lastStateData = dataHistory[1];
-        
         } else if (yrRange >= 0 && yrRange <= 10) {
             rangeSize = 1;
             backButton.disabled = false;
             lastStateData = dataHistory[2];
-            if (dataHistory.length == 3){
+            if (dataHistory.length == 3) {
                 lastStateData = dataHistory[1];
             }
         }
-        
-        d3.select("#backButton").on("click", function() {
-            dataHistory.pop();
-            plots['date_selection'].update(plots, [allDataFeatures, lastStateData, tsunamiDataFeatures]);
-        });
 
+        d3.select('#date-backButton').on('click', function () {
+            dataHistory.pop();
+            if (dataHistory.length == 0) {
+                backButton.disabled = true;
+            }
+            else {
+                plots['date_selection'].update(plots, [allDataFeatures, lastStateData[1], tsunamiDataFeatures]);
+            }
+        });
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
         // Iterate over each year range and store results
@@ -123,7 +125,8 @@ export const date_selection = {
 
         // Color scale based on counts
         const countExtent = d3.extent(count_data.flatMap((range) => range.data.map((d) => d.count)));
-        const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, countExtent[1]]);
+        const colorScaleBlue = d3.scaleSequential(d3.interpolateBlues).domain([0, countExtent[1]]);
+        const colorScaleGreen = d3.scaleSequential(d3.interpolateGreens).domain([0, countExtent[1]]);
 
         // Append the rows for each year range
         const rows = g
@@ -143,7 +146,7 @@ export const date_selection = {
             .attr('x', (d) => xScale(d.month))
             .attr('width', xScale.bandwidth())
             .attr('height', yScale.bandwidth())
-            .style('fill', (d) => colorScale(d.count));
+            .style('fill', (d) => colorScaleBlue(d.count));
 
         // Add x-axis
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
@@ -151,7 +154,7 @@ export const date_selection = {
             const formatMonth = d3.timeFormat('%b');
             return formatMonth(new Date(2020, d, 1));
         });
-        
+
         g.append('g').attr('transform', `translate(0,${height})`).call(xAxis);
 
         // Add y-axis
@@ -194,13 +197,15 @@ export const date_selection = {
 
         generateLegend(margin.left + (width - legendWidth) / 2, countExtent);
 
-        const brush = d3.brush()
-            .extent([[0, 0], [width, height]])
+        const brush = d3
+            .brush()
+            .extent([
+                [0, 0],
+                [width, height],
+            ])
             .on('start brush end', brushed);
 
-        const brushG = g.append('g')
-            .attr('class', 'brush')
-            .call(brush);
+        const brushG = g.append('g').attr('class', 'brush').call(brush);
 
         function brushed(event) {
             const selection = event.selection;
@@ -208,24 +213,26 @@ export const date_selection = {
                 console.log('No selection');
                 return;
             }
-            
+
             const [[x0, y0], [x1, y1]] = selection;
             const selectedYearRanges = [];
             const selectedMonthRanges = [];
 
-
             // Determine which year ranges are selected based on the brush's Y-axis overlap
-            svg.selectAll('.row').each(function(d) {
+            svg.selectAll('.row').each(function (d) {
                 const yPosition = yScale(d.range);
                 const yHeight = yScale.bandwidth();
                 if (y0 <= yPosition + yHeight && yPosition <= y1) {
                     const yearRange = d.range.match(/(?<!\d)-?\d+/g).map(Number);
-                    selectedYearRanges.push({start: yearRange[0], end: yearRange.length > 1 ? yearRange[1] : yearRange[0]});
+                    selectedYearRanges.push({
+                        start: yearRange[0],
+                        end: yearRange.length > 1 ? yearRange[1] : yearRange[0],
+                    });
                 }
             });
 
             // Determine which months are selected based on the brush's X-axis overlap
-            svg.selectAll('.cell').each(function(d) {
+            svg.selectAll('.cell').each(function (d) {
                 const xPosition = xScale(d.month);
                 const xWidth = xScale.bandwidth();
                 if (x0 <= xPosition + xWidth && xPosition <= x1) {
@@ -241,38 +248,40 @@ export const date_selection = {
                 const yaxis_label = d3.select('#selectButtonYaxis').property('value');
                 // Update map, scatterplot and detailed view with filtered data
                 plots['geo_map'].update(plots, [filteredData]);
-                plots['scatter_plot'].update(plots, [allDataFeatures, filteredData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
-                plots['detailed_view'].update(plots, [filteredData, tsunamiDataFeatures]);
+                plots['scatter_plot'].update(plots, [
+                    allDataFeatures,
+                    filteredData,
+                    xaxis_label,
+                    yaxis_label,
+                    tsunamiDataFeatures,
+                ]);
+                plots['detailed_view'].update(plots, [filteredData[0], tsunamiDataFeatures]);
             }
-
             // Check for any overlap between the selection and the cell positions for rows and columns
-            const selectedRanges = count_data.filter(d => {
+            const selectedRanges = count_data.filter((d) => {
                 const yPosition = yScale(d.range);
                 const yHeight = yScale.bandwidth();
                 // Check if there's any overlap in the Y-axis
                 return y0 <= yPosition + yHeight && yPosition <= y1;
             });
-            
-            const selectedMonths = d3.range(0, 12).filter(month => {
+
+            const selectedMonths = d3.range(0, 12).filter((month) => {
                 const xPosition = xScale(month);
                 const xWidth = xScale.bandwidth();
                 // Check if there's any overlap in the X-axis
                 return x0 <= xPosition + xWidth && xPosition <= x1;
             });
-            
+
             // Update the cell colors based on selection
-            rows.selectAll('.cell')
-                .style('fill', function (d) {
-                    const isInRange = selectedRanges.some(range => range.range === this.parentNode.__data__.range);
-                    const isMonthSelected = selectedMonths.includes(d.month);
-                    return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
-                });
+            rows.selectAll('.cell').style('fill', function (d) {
+                const isInRange = selectedRanges.some((range) => range.range === this.parentNode.__data__.range);
+                const isMonthSelected = selectedMonths.includes(d.month);
+                return isInRange && isMonthSelected ? colorScaleGreen(d.count) : colorScaleBlue(d.count);
+            });
 
             // Clear the brush after selection
             brushG.call(brush.move, null);
         }
-
-            
     },
     update(plots, data) {
         this.render(plots, data);
@@ -281,11 +290,10 @@ export const date_selection = {
 
 function saveCurrentDataState(data) {
     const dataString = JSON.stringify(data);
-    if (!dataHistory.some(history => JSON.stringify(history) === dataString)) {
-        dataHistory.push(JSON.parse(dataString));  // Deep copy to preserve data integrity
+    if (!dataHistory.some((history) => JSON.stringify(history) === dataString)) {
+        dataHistory.push(JSON.parse(dataString)); // Deep copy to preserve data integrity
     }
 }
-
 
 function aggregateDataByYearRange(yearMonthData, startYear, endYear) {
     const filteredData = yearMonthData.filter((d) => d.year >= startYear && d.year <= endYear);
@@ -317,12 +325,11 @@ function selectData(earthquakeDataFeatures, startYear, endYear) {
     return selectedData;
 }
 
-
 function filterDataByYearAndMonths(data, selectedYearRanges, selectedMonths) {
     return data.filter((feature) => {
         const year = parseInt(feature.properties.Year);
         const month = parseInt(feature.properties.Mo) - 1; // Adjust for zero-index month
-        const yearMatches = selectedYearRanges.some(range => year >= range.start && year <= range.end);
+        const yearMatches = selectedYearRanges.some((range) => year >= range.start && year <= range.end);
         const monthMatches = selectedMonths.length === 0 || selectedMonths.includes(month);
         return yearMatches && monthMatches;
     });

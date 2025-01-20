@@ -14,10 +14,12 @@ import * as olProj from 'ol/proj';
 import { platformModifierKeyOnly, click } from 'ol/events/condition';
 import { getWidth } from 'ol/extent';
 import * as d3 from 'd3';
-import { getStyle, updateLegend } from './geo-map-styling';
+import { getStyle, updateLegend, colorMapping } from './geo-map-styling';
 
 export let earthquakesLayer = null;
 export let heatmapLayer = null;
+export let cmap = colorMapping;
+
 let allEarthquakeData = null;
 
 // Default OSM layer
@@ -135,18 +137,20 @@ export const geo_map = {
             geojson = allEarthquakeData;
         } else {
             geojson = {
-                "type": "FeatureCollection",
-                "features": earthquakeDataFeatures
+                type: 'FeatureCollection',
+                features: earthquakeDataFeatures,
             };
         }
         const selectedFeatures = new GeoJSON().readFeatures(geojson, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
-        })
+        });
 
-        const source = earthquakesLayer.getSource()
-        source.clear();
-        source.addFeatures(selectedFeatures);
+        for (let layer of [earthquakesLayer, heatmapLayer]) {
+            const source = layer.getSource();
+            source.clear();
+            source.addFeatures(selectedFeatures);
+        }
     },
 };
 
@@ -181,22 +185,40 @@ function addSelectionInteraction(map, earthquakeData, tsunamiDataFeatures, plots
 
     select.on('select', function () {
         const selectedFeatures = select.getFeatures();
-        const selectedFeaturesArr = selectedFeatures.getArray().filter(feature => feature.getGeometry().getType() === 'Point');
+        const selectedFeaturesArr = selectedFeatures
+            .getArray()
+            .filter((feature) => feature.getGeometry().getType() === 'Point');
         // get the value of the selectButtonXaxis and selectButtonYaxis
         const xaxis_label = d3.select('#selectButtonXaxis').property('value');
         const yaxis_label = d3.select('#selectButtonYaxis').property('value');
-        if (selectedFeaturesArr.length !== 0) {            
+        if (selectedFeaturesArr.length !== 0) {
             // get the earthquake from the earthquakeData that has the same id as the selected datapoint
             const selectedDataPoint = earthquakeData.features.filter(
                 (d) => d.properties.Id === selectedFeaturesArr[0].get('Id'),
-            )[0];
-            plots['detailed_view'].update(plots, [[selectedDataPoint], tsunamiDataFeatures]);
-            plots['date_selection'].update(plots, [earthquakeData.features, [selectedDataPoint], tsunamiDataFeatures]);
-            plots['scatter_plot'].update(plots, [earthquakeData.features, [selectedDataPoint], xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            );
+            plots['detailed_view'].update(plots, [selectedDataPoint, tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, [earthquakeData.features, selectedDataPoint, tsunamiDataFeatures]);
+            plots['scatter_plot'].update(plots, [
+                earthquakeData.features,
+                selectedDataPoint,
+                xaxis_label,
+                yaxis_label,
+                tsunamiDataFeatures,
+            ]);
         } else {
             plots['detailed_view'].update(plots, [[], tsunamiDataFeatures]);
-            plots['date_selection'].update(plots, [earthquakeData.features, earthquakeData.features, tsunamiDataFeatures]);
-            plots['scatter_plot'].update(plots, [earthquakeData.features, undefined, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+            plots['date_selection'].update(plots, [
+                earthquakeData.features,
+                earthquakeData.features,
+                tsunamiDataFeatures,
+            ]);
+            plots['scatter_plot'].update(plots, [
+                earthquakeData.features,
+                undefined,
+                xaxis_label,
+                yaxis_label,
+                tsunamiDataFeatures,
+            ]);
         }
     });
 
@@ -283,7 +305,13 @@ function addDragBoxInteraction(map, select, earthquakeData, tsunamiDataFeatures,
                     .includes(d.properties[yaxis_label]),
         );
 
-        plots['scatter_plot'].update(plots, [earthquakeData.features, selectedData, xaxis_label, yaxis_label, tsunamiDataFeatures]);
+        plots['scatter_plot'].update(plots, [
+            earthquakeData.features,
+            selectedData,
+            xaxis_label,
+            yaxis_label,
+            tsunamiDataFeatures,
+        ]);
         plots['date_selection'].update(plots, [earthquakeData.features, selectedData, tsunamiDataFeatures]);
         plots['detailed_view'].update(plots, [selectedData, tsunamiDataFeatures]);
     });
