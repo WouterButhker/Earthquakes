@@ -125,14 +125,16 @@ body {
     color: #555;
 }
 
-#viewToggle {
+#viewToggle,
+#tsunamiToggle {
     position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-#viewToggle + label {
+#viewToggle + label,
+#tsunamiToggle + label {
     display: inline-block;
     width: 40px;
     height: 20px;
@@ -143,7 +145,8 @@ body {
     transition: background-color 0.3s;
 }
 
-#viewToggle + label:before {
+#viewToggle + label:before,
+#tsunamiToggle + label:before {
     content: '';
     position: absolute;
     top: 2px;
@@ -156,11 +159,13 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-#viewToggle:checked + label {
+#viewToggle:checked + label,
+#tsunamiToggle:checked + label {
     background-color: #4caf50;
 }
 
-#viewToggle:checked + label:before {
+#viewToggle:checked + label:before,
+#tsunamiToggle:checked + label:before {
     transform: translateX(20px);
 }
 

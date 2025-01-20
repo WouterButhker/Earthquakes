@@ -64,6 +64,18 @@ viewToggle.addEventListener('change', () => {
     colorDropdown.disabled = isHeatmapMode;
 });
 
+let isTsunamiOnly = false;
+d3.select('#tsunamiToggle').on('click', function () {
+    isTsunamiOnly = !isTsunamiOnly;
+    let data = earthquakeData.features;
+    if (isTsunamiOnly) data = earthquakeData.features.filter((d) => d.properties.Tsu);
+
+    plots['scatter_plot'].render(plots, [data, undefined, 'Mag', 'Focal Depth (km)', tsunamiData.features]);
+    plots['date_selection'].update(plots, [data, data, tsunamiData.features]);
+    plots['detailed_view'].update(plots, [undefined, undefined]);
+    plots['geo_map'].update(plots, [data]);
+});
+
 /* ========================================================================== */
 /* ========================== Points of interest ============================ */
 /* ========================================================================== */
