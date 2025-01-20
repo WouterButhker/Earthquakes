@@ -38,7 +38,7 @@ export const detailed_view = {
         //     d3.select('#poi_text').text('[multiple earthquakes selected]');
         //     return;
         // }
-        else if (Array.isArray(selectedDataPoint) && selectedDataPoint.length === 1) {
+        else if (Array.isArray(selectedDataPoint)) {
             selectedDataPoint = selectedDataPoint[0];
         }
 

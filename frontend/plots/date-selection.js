@@ -120,7 +120,8 @@ export const date_selection = {
 
         // Color scale based on counts
         const countExtent = d3.extent(count_data.flatMap((range) => range.data.map((d) => d.count)));
-        const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, countExtent[1]]);
+        const colorScaleBlue = d3.scaleSequential(d3.interpolateBlues).domain([0, countExtent[1]]);
+        const colorScaleGreen = d3.scaleSequential(d3.interpolateGreens).domain([0, countExtent[1]]);
 
         // Append the rows for each year range
         const rows = g
@@ -140,7 +141,7 @@ export const date_selection = {
             .attr('x', (d) => xScale(d.month))
             .attr('width', xScale.bandwidth())
             .attr('height', yScale.bandwidth())
-            .style('fill', (d) => colorScale(d.count));
+            .style('fill', (d) => colorScaleBlue(d.count));
 
         // Add x-axis
         const xAxis = d3.axisBottom(xScale).tickFormat((d) => {
@@ -270,7 +271,7 @@ export const date_selection = {
             rows.selectAll('.cell').style('fill', function (d) {
                 const isInRange = selectedRanges.some((range) => range.range === this.parentNode.__data__.range);
                 const isMonthSelected = selectedMonths.includes(d.month);
-                return isInRange && isMonthSelected ? '#32CD32' : colorScale(d.count);
+                return isInRange && isMonthSelected ? colorScaleGreen(d.count) : colorScaleBlue(d.count);
             });
 
             // Clear the brush after selection
