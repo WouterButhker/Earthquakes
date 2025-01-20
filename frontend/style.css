@@ -98,7 +98,7 @@ body {
     font-weight: bold;
     border: 2px solid #bdc3c7;
     border-radius: 8px;
-    background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+    background: #cdd2d5;
     color: #2c3e50;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
@@ -107,7 +107,7 @@ body {
 
 .dropdown:hover,
 .dropdown:focus {
-    background: linear-gradient(135deg, #ffffff, #ecf0f1);
+    background: #dadedf;
     border-color: #95a5a6;
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
 }
