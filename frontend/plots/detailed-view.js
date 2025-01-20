@@ -5,7 +5,7 @@ let content = document.getElementById('details-content');
 const descFields = ['Deaths', 'Injuries', 'Missing', 'Damage ($Mil)', 'Houses Destroyed', 'Houses Damaged'];
 const timeFields = ['Year', 'Mo', 'Dy', 'Hr', 'Mn', 'Sec'];
 const skippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude'].concat(timeFields);
-const tsunamiSkippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude'].concat(timeFields);
+const tsunamiSkippedFields = ['Id', 'Tsu', 'Region', 'Latitude', 'Longitude', 'Earthquake Magnitude'].concat(timeFields);
 
 export const detailed_view = {
     render(plots, cmap) {

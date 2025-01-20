@@ -95,7 +95,12 @@ export const date_selection = {
 
         d3.select('#date-backButton').on('click', function () {
             dataHistory.pop();
-            plots['date_selection'].update(plots, [allDataFeatures, lastStateData[1], tsunamiDataFeatures]);
+            if (dataHistory.length == 0) {
+                backButton.disabled = true;
+            }
+            else {
+                plots['date_selection'].update(plots, [allDataFeatures, lastStateData[1], tsunamiDataFeatures]);
+            }
         });
         let yearRanges = createYearRanges(minYear, maxYear, rangeSize);
 
