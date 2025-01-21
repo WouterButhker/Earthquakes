@@ -12,67 +12,90 @@
     <div id="content">
         <!-- Top section -->
         <div id="topSection">
-            <h1>Earthquake Visualizer</h1>
-            <div id="controls">
-                <div id="mapControlsContainer">
-                    <div class="map-controls-header">Map View and Dot Channels Options</div>
-                    <div class="map-controls-content">
-                        <div class="toggle-switch">
-                            <div id="viewToggleText">&nbsp;&nbsp;Dotted&nbsp;&nbsp;</div>
-                            <input type="checkbox" id="viewToggle" />
-                            <label for="viewToggle"></label>
-                        </div>
-                        <div id="selectMapVariables">
-                            <label for="size">Dot size:</label>
-                            <select name="size" id="size">
-                                <option value="Mag">Magnitude</option>
-                                <option value="Focal Depth (km)">Focal Depth (km)</option>
-                                <option value="MMI Int">Modified Mercalli Intensity</option>
-                                <option value="Total Deaths">Total Deaths</option>
-                                <option value="Total Injuries">Total Injuries</option>
-                                <option value="Total Damage ($Mil)">Total Damage</option>
-                                <option value="Total Houses Destroyed">Total Houses Destroyed</option>
-                                <option value="Total Houses Damaged">Total Houses Damaged</option>
-                            </select>
-                            <label for="color">Dot color:</label>
-                            <select name="color" id="color">
-                                <option value="Tsu">Earthquake Caused Tsunami</option>
-                                <option value="Country">Country</option>
-                                <option value="MMI Int">Modified Mercalli Intensity</option>
-                                <option value="Total Death Description">Total Deaths</option>
-                                <option value="Total Injuries Description">Total Injuries</option>
-                                <option value="Total Damage Description">Total Damage</option>
-                                <option value="Total Houses Destroyed Description">Total Houses Destroyed</option>
-                                <option value="Total Houses Damaged Description">Total Houses Damaged</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button id="resetButton">Reset Plots</button>
-            </div>
+            <h2 style="padding-right: 10px;">Earthquake Visualizer</h1>
+            <img src="earthquake_icon.svg" width="30px"></img>
+            <img src="earthquake_icon_2.svg" width="25px"></img>
+            <button id="resetButton" class="button button-reset" style="left: 50%;">Reset Plots</button>
         </div>
 
         <!-- Middle section -->
         <div id="middleSection">
+            <!-- Date selection -->
             <div id="dateSelectionDiv" class="plot-container">
                 <div class="plot-header">Click and drag to select a timeframe.</div>
                 <svg id="dateSelection"></svg>
-                <button id="backButton" style="width: 80px; height: 50px; padding: 5px; font-size: 12px;">Previous year ranges</button>
+                <button id="date-backButton" class="button button-reset">Previous year ranges</button>
             </div>
+            <!-- Map -->
             <div class="plot-container">
+                <div id="controls">
+                    <div>
+                        <!-- <div class="map-controls-header">Map View and Dot Channels Options</div> -->
+                        <div class="map-controls-content">
+                            <!-- Left side: Dropdowns -->
+                            <div class="controls-section">
+                                <div>
+                                    <label for="size">Dot size:&nbsp;</label>
+                                    <select name="size" id="size"  class="dropdown">
+                                        <option value="Mag">Magnitude</option>
+                                        <option value="Focal Depth (km)">Focal Depth (km)</option>
+                                        <option value="MMI Int">Modified Mercalli Intensity</option>
+                                        <option value="Total Deaths">Total Deaths</option>
+                                        <option value="Total Injuries">Total Injuries</option>
+                                        <option value="Total Damage ($Mil)">Total Damage</option>
+                                        <option value="Total Houses Destroyed">Total Houses Destroyed</option>
+                                        <option value="Total Houses Damaged">Total Houses Damaged</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="color">Dot color:</label>
+                                    <select name="color" id="color" class="dropdown">
+                                        <option value="Tsu">Earthquake Caused Tsunami</option>
+                                        <option value="Country">Country</option>
+                                        <option value="MMI Int">Modified Mercalli Intensity</option>
+                                        <option value="Total Deaths Description">Total Deaths</option>
+                                        <option value="Total Injuries Description">Total Injuries</option>
+                                        <option value="Total Damage Description">Total Damage</option>
+                                        <option value="Total Houses Destroyed Description">Total Houses Destroyed
+                                        </option>
+                                        <option value="Total Houses Damaged Description">Total Houses Damaged</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- Right side: Toggle and Reset button -->
+                            <div class="controls-section" style="margin-top: 6px; gap: 22px;">
+                                <div class="toggle-container">
+                                    <span class="toggle-label">Dotted</span>
+                                    <input type="checkbox" id="viewToggle" />
+                                    <label for="viewToggle"></label>
+                                    <span class="toggle-label">Heatmap</span>
+                                </div>
+                                <div class="toggle-container">
+                                    <span class="toggle-label">All data</span>
+                                    <input type="checkbox" id="tsunamiToggle" />
+                                    <label for="tsunamiToggle"></label>
+                                    <span class="toggle-label">Tsunami only</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="plot-header">Click or CTRL + drag to select earthquakes</div>
-                <div id="map"></div>
+                <div class="plot-container" style="padding: 0;">
+                    <div id="map"></div>
+                </div>
             </div>
+            <!-- Scatterplot -->
             <div id="scatterplotDiv" class="plot-container">
                 <div class="plot-header">Click and drag to select earthquakes based on selected features.</div>
                 <div class="scatter-controls">
                     <div>
                         <label for="selectButtonXaxis">X-axis:</label>
-                        <select id="selectButtonXaxis"></select>
+                        <select id="selectButtonXaxis" class="dropdown"></select>
                     </div>
                     <div>
                         <label for="selectButtonYaxis">Y-axis:</label>
-                        <select id="selectButtonYaxis"></select>
+                        <select id="selectButtonYaxis" class="dropdown"></select>
                     </div>
                 </div>
                 <svg id="scatterplot"></svg>
@@ -82,13 +105,6 @@
 
         <!-- Bottom section -->
         <div id="bottomSection">
-            <div id="legend"></div>
-            <div id="detailedViewDiv">
-                <div class="details-header">More Information</div>
-                <div class="details-content">
-                    <text id="detailed_text"></text>
-                </div>
-            </div>
             <div id="pointsOfInterestContainer">
                 <div class="poi-header">Points of Interest</div>
                 <div class="poi-buttons">
@@ -98,6 +114,11 @@
                 <div class="poi-content">
                     <text id="poi_text">[no earthquake selected]</text>
                 </div>
+            </div>
+            <div id="legend"></div>
+            <div id="detailedViewDiv">
+                <div class="details-header">More Information</div>
+                <div id="details-content"></div>
             </div>
         </div>
     </div>
