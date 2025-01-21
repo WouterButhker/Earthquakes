@@ -92,6 +92,27 @@ body {
     opacity: 0.9;
 }
 
+/* Disabled button styling */
+button:disabled, 
+#date-backButton:disabled {
+    opacity: 0.5; 
+    cursor: not-allowed; 
+    background-color: #ddd; 
+    color: #666; 
+    box-shadow: none; 
+    border: 1px solid #ccc;
+    pointer-events: none; 
+    transition: none; 
+}
+
+button:disabled:hover, 
+#date-backButton:disabled:hover {
+    transform: none; 
+    box-shadow: none; 
+    background-color: #ddd; 
+    color: #666;
+}
+
 /* Dropdown styling */
 
 .dropdown {
