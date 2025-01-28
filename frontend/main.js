@@ -116,5 +116,23 @@ d3.select('#pointOfInterest2').on('click', function () {
     plots['detailed_view'].update(plots, [interestPoint, tsunamiData.features]);
     plots['geo_map'].update(plots, [interestPoint]);
 });
+d3.select('#pointOfInterest3').on('click', function () {
+    d3.selectAll('.poi-button').classed('selected', false);
+    d3.select(this).classed('selected', true);
+    // get the earthquake that has an id of "10036"
+    const interestPoint = earthquakeData.features.filter((d) => d.properties.Id == '10036');
+
+    plots['scatter_plot'].render(plots, [
+        earthquakeData.features,
+        interestPoint,
+        'Mag',
+        'Total Damage ($Mil)',
+        tsunamiData.features,
+    ]);
+    plots['date_selection'].update(plots, [earthquakeData.features, interestPoint, tsunamiData.features]);
+    plots['detailed_view'].update(plots, [interestPoint, tsunamiData.features]);
+    // TODO set the geo map dot size to 'total damage' and the dot color to 'total injuries'
+    plots['geo_map'].update(plots, [interestPoint]);
+});
 
 addScatterplotAxisInteractions(plots, earthquakeData, tsunamiData);

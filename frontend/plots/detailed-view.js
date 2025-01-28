@@ -71,6 +71,14 @@ function changePOI(selectedDataPoint) {
         const new_poi_text =
             '<a href="' + weblink + '" target="_blank">Link to official information</a><br>' + information;
         poi_text.html(new_poi_text);
+    } else if (id === 10036) {
+        const weblink = 'https://www.ngdc.noaa.gov/hazel/view/hazards/earthquake/event-more-info/10036';
+        const information =
+            'Fourteen people killed, 200 injured and at least 50 buildings destroyed due to a fertilizer factory explosion at West. Damage estimated at about 100 million U.S. dollars. The magnitude measures only the ground motion, not the air wave, so is substantially less than the true size of the event.';
+
+        const new_poi_text =
+            '<a href="' + weblink + '" target="_blank">Link to official information</a><br>' + information;
+        poi_text.html(new_poi_text);
     } else {
         poi_text.html('[no point of interest selected]');
     }
