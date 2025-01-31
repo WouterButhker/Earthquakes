@@ -1,2 +1,7 @@
 ## How to run
-```npm run start```
+
+```
+cd frontend
+npm install
+npm run start
+```
